@@ -12,3 +12,4 @@ backbone:
     dropout: 0
     emb_dropout: 0
     num_classes: 64
+    num_channels: 1

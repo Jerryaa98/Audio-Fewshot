@@ -7,3 +7,4 @@ backbone:
     num_heads: 6
     mlp_ratio: 4
     qkv_bias: True
+    num_channels: 1

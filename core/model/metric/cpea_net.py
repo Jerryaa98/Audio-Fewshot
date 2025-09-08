@@ -13,6 +13,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from core.model.metric.metric_model import MetricModel
+from core.utils import majority_vote, vote_catagorical_acc
 
 
 def rearrange_data(data, num_classes, k):

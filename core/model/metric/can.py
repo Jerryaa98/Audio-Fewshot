@@ -27,7 +27,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from core.model.metric.metric_model import MetricModel
 
 
@@ -314,20 +314,27 @@ class CAN(MetricModel):
         :param batch:
         :return:
         """
-        images, global_targets = batch
+        if len(batch) == 2:
+            images, global_targets = batch
+            repeats = None
+            support_size = 0
+        else:
+            images, global_targets, repeats, support_size = batch
         images = images.to(self.device)
         global_targets = global_targets.to(self.device)
-        episode_size = images.size(0) // (
-            self.way_num * (self.shot_num + self.query_num)
-        )
+        
         emb = self.emb_func(images)
         (
             support_feat,
             query_feat,
             support_targets,
             query_targets,
-        ) = self.split_by_episode(emb, mode=2)
+        ) = self.split_by_episode(emb, mode=2, repeats=repeats, support_size=support_size)
 
+        # episode_size = images.size(0) // (
+        #     self.way_num * (self.shot_num + self.query_num)
+        # )
+        episode_size = len(query_feat)
         # convert to one-hot
         support_targets_one_hot = one_hot(
             support_targets.reshape(episode_size * self.way_num * self.shot_num),
@@ -343,17 +350,27 @@ class CAN(MetricModel):
         query_targets_one_hot = query_targets_one_hot.reshape(
             episode_size, self.way_num * self.query_num, self.way_num
         )
-        cls_scores = self.cam_layer(
-            support_feat, query_feat, support_targets_one_hot, query_targets_one_hot
-        )
+
+        output = []
+        for i in range(episode_size):
+            cls_scores = self.cam_layer(
+                support_feat[i].unsqueeze(0), query_feat[i].unsqueeze(0), support_targets_one_hot[i].unsqueeze(0), query_targets_one_hot[i].unsqueeze(0)
+            )
+            output.append(cls_scores)
+        cls_scores = torch.cat(output, dim=0)
         # cls_scores = self.cam_layer.val_transductive(
         #        support_feat, query_feat, support_targets_one_hot, query_targets_one_hot
         # )
+        
 
         cls_scores = cls_scores.reshape(
-            episode_size * self.way_num * self.query_num, -1
+            -1, self.way_num
         )
-        acc = accuracy(cls_scores, query_targets.reshape(-1), topk=1)
+        soft_logits = cls_scores.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        # post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_targets.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        # acc = accuracy(cls_scores, query_targets.reshape(-1), topk=1)
         return cls_scores, acc
 
     def set_forward_loss(self, batch):
@@ -361,7 +378,12 @@ class CAN(MetricModel):
         :param batch:
         :return:
         """
-        images, global_targets = batch
+        if len(batch) == 2:
+            images, global_targets = batch
+            repeats = None
+            support_size = 0
+        else:
+            images, global_targets, repeats, support_size = batch
         images = images.to(self.device)
         global_targets = global_targets.to(self.device)
         episode_size = images.size(0) // (
@@ -374,7 +396,7 @@ class CAN(MetricModel):
             support_targets,
             query_targets,
         ) = self.split_by_episode(
-            emb, mode=2
+            emb, mode=2, repeats=repeats, support_size=support_size
         )  # [4,5,512,6,6] [4,
         # 75, 512,6,6] [4, 5] [300]
         support_targets = support_targets.reshape(

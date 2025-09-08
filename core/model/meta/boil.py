@@ -19,7 +19,7 @@ Adapted from https://github.com/HJ-Yoo/BOIL.
 import torch
 from torch import nn
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .meta_model import MetaModel
 from ..backbone.utils import convert_maml_module
 
@@ -50,15 +50,20 @@ class BOIL(MetaModel):
         return feat_wo_head, feat_w_head
 
     def set_forward(self, batch):
-        image, global_target = batch  # unused global_target
-        image, global_target = batch
+        # image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
         (
             support_image,
             query_image,
             support_target,
             query_target,
-        ) = self.split_by_episode(image, mode=2)
+        ) = self.split_by_episode(image, mode=2, repeats=repeats, support_size=support_size)
         episode_size, _, c, h, w = support_image.size()
 
         output_list = []
@@ -91,18 +96,28 @@ class BOIL(MetaModel):
             output_list.append(output)
 
         output = torch.cat(output_list, dim=0)
-        acc = accuracy(output, query_target.contiguous().view(-1))
-        return output, acc
+        # acc = accuracy(output, query_target.contiguous().view(-1))
+        # return output, acc
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        pre_acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        return output, pre_acc
 
     def set_forward_loss(self, batch):
-        image, global_target = batch  # unused global_target
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
         (
             support_image,
             query_image,
             support_target,
             query_target,
-        ) = self.split_by_episode(image, mode=2)
+        ) = self.split_by_episode(image, mode=2, repeats=repeats, support_size=support_size)
         episode_size, _, c, h, w = support_image.size()
 
         output_list = []
@@ -118,9 +133,18 @@ class BOIL(MetaModel):
             output_list.append(output)
 
         output = torch.cat(output_list, dim=0)
-        loss = self.loss_func(output, query_target.contiguous().view(-1)) / episode_size
-        acc = accuracy(output, query_target.contiguous().view(-1))
-        return output, acc, loss
+        # loss = self.loss_func(output, query_target.contiguous().view(-1)) / episode_size
+        # acc = accuracy(output, query_target.contiguous().view(-1))
+        # return output, acc, loss
+
+        if repeats is None:
+            repeats = torch.ones(output.shape[0], dtype=torch.long).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        pre_query_loss = self.loss_func(output, post_query_y)
+        pre_soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(pre_soft_logits.to('cuda'), repeats.to('cuda')).to('cuda').to(dtype=torch.long)
+        pre_acc = vote_catagorical_acc(query_target.reshape(-1), pre_query_pred)
+        return pre_soft_logits, pre_acc, pre_query_loss
 
     def set_forward_adaptation(self, support_set, support_target):
         extractor_lr = self.inner_param["extractor_lr"]

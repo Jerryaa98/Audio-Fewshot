@@ -306,7 +306,7 @@ class SwinTransformer(nn.Module):
         window_size=7,
         downscaling_factors=(4, 2, 2, 2),
         relative_pos_embedding=True,
-        pool=True
+        pool=True,
     ):
         super().__init__()
         self.pool = pool

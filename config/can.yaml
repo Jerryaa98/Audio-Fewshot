@@ -1,5 +1,5 @@
 includes:
-  - headers/data.yaml
+  - headers/data_0.yaml
   - headers/device.yaml
   - headers/misc.yaml
   - headers/model.yaml
@@ -7,7 +7,7 @@ includes:
   - classifiers/CAN.yaml
   - backbones/Conv64F.yaml
 
-episode_size: 4
+episode_size: 2
 
 classifier:
   name: CAN
@@ -25,6 +25,12 @@ backbone:
     leaky_relu: True
     negative_slope: 0.2
     last_pool: False
+    num_channels: 1
+
+modality: audio
+mean_std_file: ./Auxiliary/KOS_0_alpha_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: False
 
 # backbone:
 #   name: resnet12

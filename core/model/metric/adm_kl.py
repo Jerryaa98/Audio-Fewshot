@@ -22,7 +22,7 @@ Adapted from https://github.com/WenbinLee/ADM.
 import torch
 from torch import nn
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .metric_model import MetricModel
 
 
@@ -169,7 +169,12 @@ class ADM_KL(MetricModel):
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
         episode_size = image.size(0) // (
             self.way_num * (self.shot_num + self.query_num)
@@ -180,8 +185,9 @@ class ADM_KL(MetricModel):
             query_feat,
             support_target,
             query_target,
-        ) = self.split_by_episode(feat, mode=2)
+        ) = self.split_by_episode(feat, mode=2, repeats=repeats, support_size=support_size)
 
+        
         output = self.klLayer(query_feat, support_feat).reshape(
             episode_size * self.way_num * self.query_num, -1
         )

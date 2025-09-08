@@ -14,7 +14,7 @@ import torch
 from torch import nn
 import numpy as np
 import copy
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 import torch.nn.functional as F
 from .finetuning_model import FinetuningModel
 from ..metric.deepbdc import ProtoLayer
@@ -112,24 +112,40 @@ class DeepBDC_Pretrain(FinetuningModel):
         return output, acc
 
     def meta_set_forward(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
         with torch.no_grad():
             feat = self.emb_func(image)
             feat = self.dropout(feat)
         
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=1
+            feat, mode=1, repeats=repeats, support_size=support_size
         )
         output = self.meta_val_classifier(
-            query_feat, support_feat, self.way_num, self.shot_num, self.query_num
+            query_feat[0].unsqueeze(0), support_feat, self.way_num, self.shot_num, self.query_num
         ).reshape(-1, self.way_num)
-        acc = accuracy(output, query_target.reshape(-1))
-        return output, acc
+        
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        pre_acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        # acc = accuracy(output, query_target.reshape(-1))
+        return output, pre_acc
 
     def stl_set_forward(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
+        
         with torch.no_grad():
             feat = self.emb_func(image)
 
@@ -160,14 +176,23 @@ class DeepBDC_Pretrain(FinetuningModel):
             acc_list.append(acc)
 
         output = np.stack(output_list, axis=0)
-        acc = sum(acc_list) / episode_size
-        return output, acc
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        pre_acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        # acc = sum(acc_list) / episode_size
+        return output, pre_acc
 
 
     def set_forward_loss(self, batch):
         """
         """
-        image, target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
         target = target.to(self.device)
 

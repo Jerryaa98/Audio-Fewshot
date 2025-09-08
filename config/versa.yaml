@@ -9,12 +9,18 @@ deterministic: False
 
 way_num: 5
 shot_num: 5
-query_num: 15
+query_num: 5
 test_way: 5 # use ~ -> test_* = *_num
 test_shot: 5
-test_query: 15
+test_query: 5
 
 episode_size: 1
+
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
+
 
 backbone:
   name: Conv64F
@@ -24,11 +30,12 @@ backbone:
     leaky_relu: True
     negative_slope: 0.2
     last_pool: True
+    num_channels: 1
 
 classifier:
   name: VERSA
   kwargs:
-    feat_dim: 1600
+    feat_dim: 4608
     d_theta: 256
     sample_num: 10
     drop_rate: 0.5

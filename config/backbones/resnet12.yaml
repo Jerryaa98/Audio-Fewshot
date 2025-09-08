@@ -5,3 +5,4 @@ backbone:
     avg_pool: True
     is_flatten: True
     maxpool_last2: True
+    num_channels: 1

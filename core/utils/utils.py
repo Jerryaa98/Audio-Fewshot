@@ -184,7 +184,7 @@ def prepare_device(rank, device_ids, n_gpu_use, backend, dist_url):
         )
         dist.barrier()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(device_ids)
+    os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
     n_gpu = torch.cuda.device_count()
     if n_gpu_use > 0 and n_gpu == 0:
@@ -424,3 +424,23 @@ class GradualWarmupScheduler(_LRScheduler):
                 return super(GradualWarmupScheduler, self).step(epoch)
         else:
             self.step_ReduceLROnPlateau(metrics, epoch)
+
+
+######################################################################################################################################################
+# Below is some code from MetaAudio
+
+def vote_catagorical_acc(targets, predictions):
+    return (predictions == targets).sum().float() / targets.size(0) * 100.0
+
+
+def majority_vote(soft_logits, query_nums):
+    y_preds = soft_logits.argmax(dim=1)
+
+    end_index = 0
+    aggregrated_preds = torch.zeros(len(query_nums))
+    for idx, num in enumerate(query_nums):
+        slice = y_preds[end_index:(end_index + num)]
+        value, indices = torch.mode(slice)
+        aggregrated_preds[idx] = value
+        end_index += slice.shape[0]
+    return aggregrated_preds

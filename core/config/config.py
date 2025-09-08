@@ -37,10 +37,11 @@ class Config(object):
             is_resume: Specifies whether to resume, the default is False.
         """
         self.is_resume = is_resume
-        self.config_file = config_file
+        # self.config_file = config_file
         self.console_dict = self._load_console_dict()
+        self.config_file = self.console_dict.get("yaml_path", config_file)
         self.default_dict = self._load_config_files(DEFAULT_FILE)
-        self.file_dict = self._load_config_files(config_file)
+        self.file_dict = self._load_config_files(self.config_file)
         self.variable_dict = self._load_variable_dict(variable_dict)
         self.config_dict = self._merge_config_dict()
 
@@ -155,6 +156,7 @@ class Config(object):
         parser.add_argument("-seed", type=int, help="seed")
         parser.add_argument("-deterministic", type=bool, help="deterministic or not")
         parser.add_argument("-tag", "--tag", type=str, help="experiment tag")
+        parser.add_argument('--yaml_path', type=str, default="./config/anil.yaml")
         args = parser.parse_args()
         # Remove key-None pairs
         return {k: v for k, v in vars(args).items() if v is not None}

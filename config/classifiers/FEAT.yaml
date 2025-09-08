@@ -1,7 +1,7 @@
 classifier:
   name: FEAT
   kwargs:
-    hdim: 640
+    hdim: 4608
     temperature: 1.0
     temperature2: 1.0
     balance: 0.5

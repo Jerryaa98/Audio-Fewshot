@@ -13,11 +13,11 @@ image_size: 84
 batch_size: 64
 
 test_episode: 600   # test/val n_episodes, number of episodes in meta val
-test_epoch: 5
+test_epoch: 1
 test_query: 15
 test_shot: 1
 test_way: 5
-train_episode: 600
+train_episode: 100
 query_num: 15
 shot_num: 1
 way_num: 5
@@ -27,16 +27,22 @@ augment_times: 1
 augment_times_query: 1
 augment_method: DeepBdcAugment
 
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
+
 backbone:
   name: resnet12Bdc
   kwargs:
     reduce_dim: 640
+    num_channels: 1
 
 classifier:
   name: DeepBDC
   kwargs: ~
 
-pretrain_path: ./results/DeepBDC_Pretrain-miniImageNet--ravi-resnet12Bdc-5-1-Feb-08-2023-17-07-27/checkpoints/emb_func_best.pth
+pretrain_path: ./results/DeepBDC_Pretrain-KOS_spec-resnet12Bdc-5-1-Sep-04-2025-22-58-37/checkpoints/emb_func_best.pth
 
 optimizer:
   kwargs:

@@ -25,7 +25,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .metric_model import MetricModel
 
 
@@ -110,7 +110,12 @@ class DSN(MetricModel):
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
         episode_size = image.size(0) // (
             self.way_num * (self.shot_num + self.query_num)
@@ -162,17 +167,28 @@ class DSN(MetricModel):
                 query_feat,
                 support_target,
                 query_target,
-            ) = self.split_by_episode(feat, mode=1)
+            ) = self.split_by_episode(feat, mode=1, repeats=repeats, support_size=support_size)
 
-            output, _ = self.dsn_layer(
-                query_feat, support_feat, self.way_num, self.shot_num
-            )
+            output = []
+            for i in range(len(query_feat)):
+                output_per_episode, _ = self.dsn_layer(
+                    query_feat, support_feat, self.way_num, self.shot_num
+                )
+                output.append(output_per_episode)
+            output = torch.cat(output, dim=0)
 
         output = output.reshape(
-            episode_size * self.way_num * self.query_num, self.way_num
+            -1, self.way_num
         )
-        output = output * self.scale if self.enable_scale else output
-        acc = accuracy(output, query_target.reshape(-1))
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        pre_query_pred = pre_query_pred * self.scale if self.enable_scale else pre_query_pred
+
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        
+        # output = output * self.scale if self.enable_scale else output
+        # acc = accuracy(output, query_target.reshape(-1))
 
         return output, acc
 
@@ -182,7 +198,12 @@ class DSN(MetricModel):
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
         episode_size = image.size(0) // (
             self.way_num * (self.shot_num + self.query_num)

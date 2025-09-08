@@ -99,6 +99,7 @@ class ResNet(nn.Module):
         avg_pool=True,
         is_flatten=True,
         last_block_stride=2,
+        num_channels=3,
     ):
         super(ResNet, self).__init__()
 
@@ -106,7 +107,7 @@ class ResNet(nn.Module):
         self.avg_pool = avg_pool
         self.is_flatten = is_flatten
         self.inplanes = 64
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(num_channels, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
         self.layer1 = self._make_layer(block, 64, layers[0])

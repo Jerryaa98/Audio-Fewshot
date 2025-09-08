@@ -7,6 +7,13 @@ includes:
   - classifiers/DN4.yaml
   - backbones/Conv64F.yaml
 
+
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: False
+
+
 classifier:
   name: DN4
   kwargs:
@@ -20,6 +27,7 @@ backbone:
     leaky_relu: True
     negative_slope: 0.2
     last_pool: False
+    num_channels: 1
 
 # backbone:
 #   name: resnet12

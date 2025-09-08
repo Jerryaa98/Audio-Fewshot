@@ -22,6 +22,11 @@ episode_size: 1
 device_ids: 0
 n_gpu: 1
 
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
+
 # optimizer:
 #   name: SGD
 #   kwargs:
@@ -58,6 +63,7 @@ backbone:
   kwargs:
     is_flatten: True
     is_feature: False
+    num_channels: 1
 
 # backbone:
 #   name: resnet12

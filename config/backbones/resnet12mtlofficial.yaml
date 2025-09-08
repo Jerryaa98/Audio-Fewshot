@@ -2,3 +2,4 @@ backbone:
   name: resnet12MTLofficial
   kwargs:
     MTL: False
+    num_channels: 1

@@ -9,3 +9,4 @@ from .leo import LEO
 from .mtl import MTL
 from .boil import BOIL
 from .matchingnet_ifsl import DMatchingNet
+from .metal import METAL

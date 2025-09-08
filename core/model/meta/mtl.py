@@ -23,7 +23,7 @@ from torch import digamma, nn
 import torch.nn.functional as F
 import copy
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote
 from .meta_model import MetaModel
 from ..backbone.utils import convert_mtl_module
 

@@ -19,7 +19,7 @@ Adapted from https://github.com/Gordonjo/versa.
 import torch
 import torch.nn as nn
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .meta_model import MetaModel
 
 
@@ -115,13 +115,18 @@ class VERSA(MetaModel):
 
     @torch.no_grad()
     def set_forward(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch   # unused global_target
         image = image.to(self.device)
 
         feat = self.emb_func(image)
         feat = self.h(feat)
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=1
+            feat, mode=1, repeats=repeats, support_size=support_size
         )
         episode_size = support_feat.size(0)
         query_target = query_target.contiguous().reshape(episode_size, -1)
@@ -141,24 +146,32 @@ class VERSA(MetaModel):
 
         output, _ = self.head(
             self.way_num,
-            query_feat,
-            query_target,
+            query_feat[0].unsqueeze(0),
+            torch.repeat_interleave(query_target.reshape(-1), repeats.to(query_target.device)).to(query_target.device, dtype=torch.long).unsqueeze(0),
             weight_mean,
             weight_logvar,
             bias_mean,
             bias_logvar,
         )
-        acc = accuracy(output, query_target.reshape(-1))
+        output = output.softmax(dim=-1)
+        pre_query_pred = majority_vote(output, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        # acc = accuracy(output, query_target.reshape(-1))
         return output, acc
 
     def set_forward_loss(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
 
         feat = self.emb_func(image)
         feat = self.h(feat)
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=1
+            feat, mode=1, repeats=repeats, support_size=support_size
         )
         episode_size = support_feat.size(0)
         query_target = query_target.contiguous().reshape(episode_size, -1)

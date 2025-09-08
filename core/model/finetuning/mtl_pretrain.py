@@ -21,7 +21,7 @@ Adapted from https://github.com/yaoyao-liu/meta-transfer-learning.
 import torch
 from torch import nn
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .finetuning_model import FinetuningModel
 import torch.nn.functional as F
 
@@ -69,13 +69,19 @@ class MTLPretrain(FinetuningModel):  # use image-size=80 in repo
         :param batch:
         :return:
         """
-        image, _ = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
+        
         image = image.to(self.device)
         with torch.no_grad():
             feat = self.emb_func(image)
 
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=1
+            feat, mode=1, support_size=support_size, repeats=repeats
         )
         episode_size, _, c = support_feat.size()
         output_list = []
@@ -92,7 +98,13 @@ class MTLPretrain(FinetuningModel):  # use image-size=80 in repo
 
         output = torch.cat(output_list, dim=0)
 
-        acc = accuracy(output, query_target.contiguous().reshape(-1))
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        
+
+        # acc = accuracy(output, query_target.contiguous().reshape(-1))
 
         return output, acc
 
@@ -102,7 +114,12 @@ class MTLPretrain(FinetuningModel):  # use image-size=80 in repo
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
         global_target = global_target.to(self.device).contiguous()
 

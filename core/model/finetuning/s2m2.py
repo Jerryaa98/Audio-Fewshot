@@ -5,7 +5,7 @@ from re import T
 import torch
 from torch import nn
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .finetuning_model import FinetuningModel
 from torch.nn.utils.weight_norm import WeightNorm
 import numpy as np
@@ -50,13 +50,18 @@ class S2M2(FinetuningModel):
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
         with torch.no_grad():
             feat = self.emb_func(image)
 
 
-        support_feat, query_feat, support_target, query_target = self.split_by_episode(feat, mode=1)
+        support_feat, query_feat, support_target, query_target = self.split_by_episode(feat, mode=1, repeats=repeats, support_size=support_size)
         episode_size = support_feat.size(0)
 
         output_list = []
@@ -66,8 +71,13 @@ class S2M2(FinetuningModel):
 
         output = torch.cat(output_list, dim=0)
 
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        
 
-        acc = accuracy(output, query_target.reshape(-1))
+        # acc = accuracy(output, query_target.reshape(-1))
         #acc=((output.to(self.device)==query_target).sum().item()/output.size(0))
         return output, acc
 
@@ -76,7 +86,12 @@ class S2M2(FinetuningModel):
         :param batch:
         :return:
         """
-        image, target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
         target = target.to(self.device)
 

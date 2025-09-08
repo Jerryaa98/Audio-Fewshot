@@ -16,7 +16,8 @@ backbone:
 #  name: resnet18
 
   name: resnet12
-  kwargs: ~
+  kwargs: 
+    num_channels: 1
 
 #  kwargs:
 #    is_feature: false

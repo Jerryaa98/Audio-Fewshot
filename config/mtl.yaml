@@ -7,6 +7,12 @@ include:
   - backbones/Conv64F.yaml
   - classifiers/MTL_meta.yaml
 
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
+
+
 pretrain_path: ./results/checkpoint.pth
 
 way_num: 5
@@ -25,6 +31,7 @@ backbone:
     leaky_relu: False
     negative_slope: 0.2
     last_pool: True
+    num_channels: 1
 
 classifier:
   name: MTL

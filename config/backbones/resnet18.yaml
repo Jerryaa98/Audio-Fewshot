@@ -4,3 +4,4 @@ backbone:
     is_feature: False
     avg_pool: True
     is_flatten: True
+    num_channels: 1

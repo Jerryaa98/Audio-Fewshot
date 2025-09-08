@@ -34,6 +34,24 @@ class ANILLayer(nn.Module):
         return self.layers(x)
 
 
+def vote_catagorical_acc(targets, predictions):
+    return (predictions == targets).sum().float() / targets.size(0)
+
+
+def majority_vote(soft_logits, query_nums):
+    y_preds = soft_logits.argmax(dim=1)
+
+    end_index = 0
+    aggregrated_preds = torch.zeros(len(query_nums))
+    for idx, num in enumerate(query_nums):
+        slice = y_preds[end_index:(end_index + num)]
+        value, indices = torch.mode(slice)
+        aggregrated_preds[idx] = value
+        end_index += slice.shape[0]
+    return aggregrated_preds
+
+
+
 class ANIL(MetaModel):
     def __init__(self, inner_param, feat_dim, hid_dim=640, **kwargs):
         super(ANIL, self).__init__(**kwargs)
@@ -47,12 +65,17 @@ class ANIL(MetaModel):
         convert_maml_module(self.classifier)
 
     def set_forward(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
-
+    
         feat = self.emb_func(image)
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=1
+            feat, mode=1, repeats=repeats, support_size=support_size
         )
         episode_size = support_feat.size(0)
 
@@ -63,11 +86,20 @@ class ANIL(MetaModel):
             output_list.append(output)
 
         output = torch.cat(output_list, dim=0)
-        acc = accuracy(output.squeeze(), query_target.reshape(-1))
-        return output, acc
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        pre_acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        # acc = accuracy(output.squeeze(), query_target.reshape(-1))
+        return output, pre_acc.item()
 
     def set_forward_loss(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+        else:
+            image, global_target, repeats, support_size = batch
+        
         image = image.to(self.device)
 
         feat = self.emb_func(image)

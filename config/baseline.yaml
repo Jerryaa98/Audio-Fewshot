@@ -7,6 +7,12 @@ includes:
   - classifiers/Baseline.yaml
   - backbones/Conv64F.yaml
 
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: False
+
+
 classifier:
   name: Baseline
   kwargs:
@@ -17,8 +23,8 @@ classifier:
           lr: 1e-3
       inner_train_iter: 100
       inner_batch_size: 4
-    feat_dim: 1600
-    num_class: 64
+    feat_dim: 4608
+    num_class: 38
 
 backbone:
   name: Conv64F
@@ -28,6 +34,7 @@ backbone:
     leaky_relu: False
     negative_slope: 0.2
     last_pool: True
+    num_channels: 1
 
 # backbone:
 #   name: resnet12

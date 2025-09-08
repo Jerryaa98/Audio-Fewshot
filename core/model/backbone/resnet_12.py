@@ -183,8 +183,9 @@ class ResNet(nn.Module):
         dropblock_size=5,
         is_flatten=True,
         maxpool_last2=True,
+        num_channels=3,
     ):
-        self.inplanes = 3
+        self.inplanes = num_channels
         super(ResNet, self).__init__()
 
         self.layer1 = self._make_layer(

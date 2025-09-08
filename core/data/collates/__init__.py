@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from .collate_functions import GeneralCollateFunction, FewShotAugCollateFunction
+from .collate_functions import GeneralCollateFunction, FewShotAugCollateFunction, FewShotAugCollateFunctionAudio
 from .contrib import get_augment_method,get_mean_std
 from ...utils import ModelType
 
 
-def get_collate_function(config, trfms, mode, model_type):
+def get_collate_function(config, trfms, mode, model_type, modality='image'):
     """Set the corresponding `collate_fn` by dict.
 
     + For finetuning-train, return `GeneralCollateFunction`
@@ -24,15 +24,30 @@ def get_collate_function(config, trfms, mode, model_type):
     ), "model_type should not be ModelType.ABSTRACT"
 
     if mode == "train" and model_type == ModelType.FINETUNING:
-        collate_function = GeneralCollateFunction(trfms, config["augment_times"])
+        if modality == 'image':
+            collate_function = GeneralCollateFunction(trfms, config["augment_times"])
+        else:
+            collate_function = GeneralCollateFunction(trfms, config["augment_times"])
     else:
-        collate_function = FewShotAugCollateFunction(
-            trfms,
-            config["augment_times"],
-            config["augment_times_query"],
-            config["way_num"] if mode == "train" else config["test_way"],
-            config["shot_num"] if mode == "train" else config["test_shot"],
-            config["query_num"] if mode == "train" else config["test_query"],
-        )
+        if modality == 'image':
+            collate_function = FewShotAugCollateFunction(
+                trfms,
+                config["augment_times"],
+                config["augment_times_query"],
+                config["way_num"] if mode == "train" else config["test_way"],
+                config["shot_num"] if mode == "train" else config["test_shot"],
+                config["query_num"] if mode == "train" else config["test_query"],
+            )
+        else:
+            collate_function = FewShotAugCollateFunctionAudio(
+                trfms,
+                config["augment_times"],
+                config["augment_times_query"],
+                config["way_num"] if mode == "train" else config["test_way"],
+                config["shot_num"] if mode == "train" else config["test_shot"],
+                config["query_num"] if mode == "train" else config["test_query"],
+                mode=mode,
+            )
+
 
     return collate_function

@@ -14,7 +14,7 @@ Adapted from https://github.com/baiksung/MeTAL.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .meta_model import MetaModel
 from .maml import MAMLLayer
 from ..backbone.utils import convert_maml_module
@@ -45,14 +45,21 @@ class METAL(MetaModel):
         return out2
 
     def set_forward(self, batch):
-        image, _ = batch
+        # image, _,  = batch
+        if len(batch) == 2:
+            image, _ = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, _, repeats, support_size = batch   # unused global_target
+        
         image = image.to(self.device)
         (
             support_image,
             query_image,
             support_target,
             query_target,
-        ) = self.split_by_episode(image, mode=2)
+        ) = self.split_by_episode(image, mode=2, repeats=repeats, support_size=support_size)
         episode_size, _, c, h, w = support_image.size()
 
         output_list = []
@@ -68,18 +75,31 @@ class METAL(MetaModel):
             output_list.append(output)
 
         output = torch.cat(output_list, dim=0)
-        acc = accuracy(output, query_target.contiguous().view(-1))
-        return output, acc
+        # acc = accuracy(output, query_target.contiguous().view(-1))
+        # return output, acc
+        output = output.softmax(dim=-1)
+        pre_query_pred = majority_vote(output, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        pre_acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        return output, pre_acc
+
 
     def set_forward_loss(self, batch):
-        image, _ = batch
+        # image, _ = batch
+        if len(batch) == 2:
+            image, _ = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, _, repeats, support_size = batch   # unused global_target
+        
         image = image.to(self.device)
         (
             support_image,
             query_image,
             support_target,
             query_target,
-        ) = self.split_by_episode(image, mode=2)
+        ) = self.split_by_episode(image, mode=2, repeats=repeats, support_size=support_size)
         episode_size, _, c, h, w = support_image.size()
 
         output_list = []
@@ -96,8 +116,15 @@ class METAL(MetaModel):
 
         output = torch.cat(output_list, dim=0)
         loss = F.cross_entropy(output, query_target.contiguous().view(-1))
-        acc = accuracy(output, query_target.contiguous().view(-1))
-        return output, acc, loss
+        if repeats is None:
+            acc = accuracy(output, query_target.contiguous().view(-1))
+            return output, acc, loss
+        else:
+            soft_logits = output.softmax(dim=1)
+            pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+            post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+            pre_acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+            return output, pre_acc, loss
 
     def set_forward_adaptation(self, support_set, query_set, support_target):
         lr = self.inner_param["lr"]

@@ -149,6 +149,7 @@ class Trainer(object):
         end = time()
         log_scale = 1 if self.model_type == ModelType.FINETUNING else episode_size
         for batch_idx, batch in enumerate(zip(*self.train_loader)):
+            print(batch[0][0].shape)
             if self.rank == 0:
                 self.writer.set_step(
                     epoch_idx * max(map(len, self.train_loader))
@@ -166,8 +167,9 @@ class Trainer(object):
 
             # calculate the output
             calc_begin = time()
+            casting_ = lambda x: x.to(self.device) if not isinstance(x, int) and x is not None else (None if x is None else x)
             output, acc, loss = self.model(
-                [elem for each_batch in batch for elem in each_batch]
+                [casting_(elem) for each_batch in batch for elem in each_batch]
             )
 
             # compute gradients
@@ -243,6 +245,8 @@ class Trainer(object):
         log_scale = self.config["episode_size"]
         with torch.set_grad_enabled(enable_grad):
             loader = self.test_loader if is_test else self.val_loader
+            if is_test:
+                print("Testing...")
             for batch_idx, batch in enumerate(zip(*loader)):
                 if self.rank == 0:
                     self.writer.set_step(
@@ -260,7 +264,7 @@ class Trainer(object):
                 # calculate the output
                 calc_begin = time()
                 output, acc = self.model(
-                    [elem for each_batch in batch for elem in each_batch]
+                    [(elem.to('cuda') if not isinstance(elem, int) else elem) for each_batch in batch for elem in each_batch]
                 )
                 meter.update("calc_time", time() - calc_begin)
 
@@ -272,7 +276,7 @@ class Trainer(object):
 
                 if ((batch_idx + 1) * log_scale % self.config["log_interval"] == 0) or (
                     batch_idx + 1
-                ) * episode_size >= max(map(len, loader)) * log_scale:
+                ) * episode_size >= max(map(len, loader)) * log_scale or batch_idx == (len(loader) - 1):
                     info_str = (
                         "Epoch-({}): [{}/{}]\t"
                         "Time {:.3f} ({:.3f})\t"
@@ -391,9 +395,9 @@ class Trainer(object):
         """
         self._check_data_config()
         distribute = self.distribute
-        train_loader = get_dataloader(config, "train", self.model_type, distribute)
-        val_loader = get_dataloader(config, "val", self.model_type, distribute)
-        test_loader = get_dataloader(config, "test", self.model_type, distribute)
+        train_loader = get_dataloader(config, "train", self.model_type, distribute, config['modality'] if 'modality' in config else 'image')
+        val_loader = get_dataloader(config, "val", self.model_type, distribute, config['modality'] if 'modality' in config else 'image')
+        test_loader = get_dataloader(config, "test", self.model_type, distribute, config['modality'] if 'modality' in config else 'image')
 
         return train_loader, val_loader, test_loader
 
@@ -418,6 +422,7 @@ class Trainer(object):
             "test_query": config["test_query"],
             "emb_func": emb_func,
             "device": self.device,
+            "num_channels": config["backbone"]['kwargs']["num_channels"] if "num_channels" in config["backbone"]['kwargs'] else 3,
         }
         model = get_instance(arch, "classifier", config, **model_kwargs)
 
@@ -560,7 +565,7 @@ class Trainer(object):
             scheduler.load_state_dict(state_dict)
             from_epoch = all_state_dict["epoch"]
             best_val_acc = all_state_dict["best_val_acc"]
-            best_test_acc = all_state_dict["best_val_acc"]
+            best_test_acc = all_state_dict["best_test_acc"]
             print("model resume from the epoch {}".format(from_epoch))
 
         return optimizer, scheduler, from_epoch, best_val_acc, best_test_acc
@@ -587,7 +592,7 @@ class Trainer(object):
             if "dist_url" not in self.config
             else self.config["dist_url"],
         )
-        torch.cuda.set_device(self.rank)
+        # torch.cuda.set_device(self.rank)
 
         return device, list_ids
 

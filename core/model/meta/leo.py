@@ -22,7 +22,7 @@ import torch
 from torch import nn
 import math
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .meta_model import MetaModel
 
 
@@ -145,13 +145,19 @@ class LEO(MetaModel):
         self.loss_func = nn.CrossEntropyLoss()
 
     def set_forward(self, batch):
-        image, global_target = batch
+        # image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
 
         with torch.no_grad():
             feat = self.emb_func(image)
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=1
+            feat, mode=1, repeats=repeats, support_size=support_size
         )
         episode_size = support_feat.size(0)
 
@@ -164,15 +170,27 @@ class LEO(MetaModel):
         leo_weight = leo_weight.permute([0, 2, 1])
 
         leo_weight = self.finetune(leo_weight, support_feat, support_target)
-
-        output = torch.bmm(query_feat, leo_weight)
+        output_list = []
+        for query_feat_i in query_feat:
+            output_list.append(torch.bmm(query_feat_i.unsqueeze(0), leo_weight))
+        
+        output = torch.cat(output_list, dim=0)
         output = output.contiguous().reshape(-1, self.way_num)
-
-        acc = accuracy(output, query_target.contiguous().reshape(-1))
-        return output, acc
+        output = output.softmax(dim=-1)
+        pre_query_pred = majority_vote(output, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        pre_acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        # acc = accuracy(output, query_target.contiguous().reshape(-1))
+        return output, pre_acc.item()
 
     def set_forward_loss(self, batch):
-        image, global_target = batch
+        # image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
 
         with torch.no_grad():

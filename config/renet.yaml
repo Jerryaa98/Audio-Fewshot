@@ -10,6 +10,7 @@ backbone:
     leaky_relu: false
     maxpool_last2: true
     negative_slope: 0.2
+    num_channels: 1
   name: Conv64F
 batch_size: 128
 classifier:
@@ -75,3 +76,8 @@ train_episode: 300
 use_memory: false
 way_num: 5
 dataloader_num: 2
+
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True

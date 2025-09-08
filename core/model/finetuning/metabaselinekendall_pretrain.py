@@ -18,7 +18,7 @@ Adapter from https://github.com/kaipengm2/DiffKendall
 import torch
 from torch import nn
 import torch.nn.functional as F
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .finetuning_model import FinetuningModel
 from itertools import combinations
 import random
@@ -123,24 +123,38 @@ class MetabaselineKendallPretrain(FinetuningModel):
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
         with torch.no_grad():
             feat = self.emb_func(image)
 
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=1
+            feat, mode=1, repeats=repeats, support_size=support_size 
         )
         episode_size = support_feat.size(0)
         t, wq, c = query_feat.size()
         _, ws, _ = support_feat.size()
-        query_feat = query_feat.reshape(t, self.way_num * self.query_num, c)
         support_feat = support_feat.reshape(t, self.way_num, self.shot_num, c)
         proto_feat = torch.mean(support_feat, dim=2)
-        output = self.proto_layer(
-            query_feat, proto_feat, "kendall"
-        ).reshape(episode_size * self.way_num * self.query_num, self.way_num)
-        acc = accuracy(output, query_target.reshape(-1))
+
+        output = []
+        for i in range(len(query_feat)):
+            output_per_episode = self.proto_layer(
+                query_feat[i].unsqueeze(0), proto_feat, "kendall"
+            ).reshape(-1, self.way_num)
+            output.append(output_per_episode)
+        output = torch.cat(output, dim=0)
+        # acc = accuracy(output, query_target.reshape(-1))        
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        
         return output, acc
 
     def set_forward_loss(self, batch):
@@ -148,7 +162,12 @@ class MetabaselineKendallPretrain(FinetuningModel):
         :param batch:
         :return:
         """
-        image, target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
         target = target.to(self.device)
 

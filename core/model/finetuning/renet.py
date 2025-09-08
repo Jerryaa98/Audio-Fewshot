@@ -18,7 +18,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .finetuning_model import FinetuningModel
 from core.utils.enum_type import ModelType
 

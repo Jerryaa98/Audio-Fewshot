@@ -7,8 +7,12 @@ includes:
   - classifiers/FRN.yaml
   - backbones/resnet12.yaml
 
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
 
-device_ids: 7
+device_ids: 1
 n_gpu: 1
 way_num: 15
 shot_num: 5
@@ -31,6 +35,7 @@ backbone:
     avg_pool: False
     is_flatten: False
     maxpool_last2: True
+    num_channels: 1
 
 val_per_epoch: 1
 

@@ -5,7 +5,7 @@ includes:
   - headers/model.yaml
   - headers/optimizer.yaml
 
-data_root: /data/Libfewshot/tiered_imagenet
+data_root: /mnt/c/Users/murad/Desktop/MetaAudio/KOS_spec
 way_num: 5
 shot_num: 1
 
@@ -14,12 +14,16 @@ query_num: 3
 
 episode_size: 2
 
-train_episode: 2000
-test_episode: 600
+train_episode: 4
+test_episode: 4
 
 device_ids: 0
 n_gpu: 1
 epoch: 100
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
 
 optimizer:
   name: Adam
@@ -48,7 +52,8 @@ optimizer:
 
 backbone:
   name: resnet12
-  kwargs: ~
+  kwargs: 
+    num_channels: 1
 
 classifier:
   name: METAL
@@ -57,5 +62,5 @@ classifier:
        lr: 1e-2
        train_iter: 5
        test_iter: 5
-     feat_dim: 640
+     feat_dim: 12800
 

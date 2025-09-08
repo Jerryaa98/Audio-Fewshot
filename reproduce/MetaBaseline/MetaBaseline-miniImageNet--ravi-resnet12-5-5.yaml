@@ -13,11 +13,11 @@ classifier:
   kwargs:
 
   name: MetaBaseline
-data_root: /data/fewshot/miniImageNet--ravi
+data_root: ./data/fewshot/miniImageNet--ravi
 deterministic: true
-device_ids: 0,1,2,3
-n_gpu: 4
-episode_size: 4
+device_ids: 0
+n_gpu: 1
+episode_size: 1
 epoch: 100
 image_size: 84
 log_interval: 100
@@ -40,7 +40,7 @@ parallel_part:
 - emb_func
 - classifier
 port: 31691
-pretrain_path: ./results/MetabaselinePretrain-miniImageNet--ravi-resnet12-5-5-Apr-30-2024-10-55-43/checkpoints/emb_func_best.pth
+pretrain_path: null
 query_num: 15
 rank: 0
 result_root: ./results

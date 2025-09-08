@@ -7,8 +7,12 @@ includes:
   - classifiers/SKD.yaml
   - backbones/resnet12.yaml
 
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
 
-device_ids: 0
+device_ids: 1
 way_num: 5
 shot_num: 1
 query_num: 15
@@ -43,6 +47,7 @@ backbone:
     negative_slope: 0.2
     last_pool: True
     maxpool_last2: True
+    num_channels: 1
 
 # backbone:
 #   name: resnet12

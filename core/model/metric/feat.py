@@ -19,7 +19,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 import numpy as np
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .metric_model import MetricModel
 
 
@@ -146,22 +146,35 @@ class FEAT(MetricModel):
         :param batch:
         :return:
         """
-        images, global_targets = batch
+        if len(batch) == 2:
+            images, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            images, global_target, repeats, support_size = batch
         images = images.to(self.device)
-        self.episode_size = images.size(0) // (
-            self.way_num * (self.shot_num + self.query_num)
-        )
+        
         self.feat = self.emb_func(images)  # [e*(q+s) x hdim]
         (
             self.support_feat,
             self.query_feat,
             support_target,
             query_target,
-        ) = self.split_by_episode(self.feat, mode=1)
+        ) = self.split_by_episode(self.feat, mode=1, repeats=repeats, support_size=support_size)
+
+        self.query_feat = self.query_feat[0].unsqueeze(0)
+
+        self.episode_size = (self.support_feat.size(1) + repeats.sum().item()) // (
+            self.way_num * (self.shot_num + self.query_num)
+        )
 
         logits = self._calc_logits().reshape(-1, self.way_num)
-
-        acc = accuracy(logits, query_target.reshape(-1))
+        soft_logits = logits.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        
+        # acc = accuracy(logits, query_target.reshape(-1))
         return logits, acc
 
     def set_forward_loss(self, batch):
@@ -170,11 +183,14 @@ class FEAT(MetricModel):
         :param batch:
         :return:
         """
-        images, global_targets = batch
+        if len(batch) == 2:
+            images, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            images, global_target, repeats, support_size = batch
         images = images.to(self.device)
-        self.episode_size = images.size(0) // (
-            self.way_num * (self.shot_num + self.query_num)
-        )
+        
         self.feat = self.emb_func(images)  # [e*(q+s) x hdim]
         (
             self.support_feat,
@@ -182,6 +198,10 @@ class FEAT(MetricModel):
             support_target,
             query_target,
         ) = self.split_by_episode(self.feat, mode=1)
+
+        self.episode_size = images.size(0) // (
+            self.way_num * (self.shot_num + self.query_num)
+        )
 
         target_aux = torch.cat(
             [
@@ -196,8 +216,17 @@ class FEAT(MetricModel):
         loss1 = self.loss_func(logits, query_target.reshape(-1))
 
         loss_reg = self.loss_func(reg_logits, target_aux)
+        
+        if repeats is None:
+            acc = accuracy(logits, query_target.reshape(-1))
+        else:
+            soft_logits = logits.softmax(dim=1)
+            pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+            post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+            acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        
 
-        acc = accuracy(logits, query_target.reshape(-1))
+        # acc = accuracy(logits, query_target.reshape(-1))
         loss = loss1 * self.balance + loss_reg
         return logits, acc, loss
 

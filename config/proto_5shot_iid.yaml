@@ -1,0 +1,53 @@
+includes:
+  - headers/data_0.yaml
+  - headers/device.yaml
+  - headers/misc.yaml
+  - headers/model.yaml
+  - headers/optimizer.yaml
+  - classifiers/Proto.yaml
+  - backbones/resnet12.yaml
+
+modality: audio
+mean_std_file: ./Auxiliary/KOS_0_alpha_Mean_Std.npy
+# mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+
+
+device_ids: 1
+n_gpu: 1
+way_num: 5
+shot_num: 5
+query_num: 10
+episode_size: 1
+train_episode: 2000
+test_episode: 600
+ood: False
+
+# backbone:
+#   name: Conv64F
+#   kwargs:
+#     is_flatten: True
+#     is_feature: False
+#     leaky_relu: False
+#     negative_slope: 0.2
+#     last_pool: True
+#     num_channels: 1
+
+# backbone:
+#   name: resnet12
+#   kwargs:
+#     keep_prob: 0.0
+
+# backbone:
+#   name: resnet18
+#   kwargs:
+
+backbone:
+  name: WRN
+  kwargs:
+    depth: 10
+    widen_factor: 10
+    dropRate: 0.0
+    avg_pool: True
+    is_flatten: True
+    num_channels: 1

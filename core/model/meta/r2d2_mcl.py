@@ -18,7 +18,7 @@ Adapted from https://github.com/kjunelee/MetaOptNet.
 import torch
 from torch import nn
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .meta_model import MetaModel
 import torch.nn.functional as F
 from core.model.metric.mcl import MCLMask
@@ -138,8 +138,15 @@ class R2D2MCL(MetaModel):
         self.mel_mask = MCLMask(kwargs.get("katz_factor"),kwargs.get("gamma"), kwargs.get("gamma2"))
         self.n_way = kwargs.get('way_num')
         self.k_shot = kwargs.get('shot_num')
+    
     def set_forward(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch   # unused global_target
+        
         image = image.to(self.device)
 
         feat = self.emb_func(image)
@@ -157,11 +164,20 @@ class R2D2MCL(MetaModel):
             self.way_num, self.shot_num, query_feat, support_feat, support_target
         )
         output = output.contiguous().reshape(-1, self.way_num)
-        acc = accuracy(output.squeeze(), query_target.contiguous().reshape(-1))
+        output = output.softmax(dim=-1)
+        pre_query_pred = majority_vote(output, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        # acc = accuracy(output.squeeze(), query_target.contiguous().reshape(-1))
         return output, acc
 
     def set_forward_loss(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch   # unused global_target
         image = image.to(self.device)
 
         feat = self.emb_func(image)

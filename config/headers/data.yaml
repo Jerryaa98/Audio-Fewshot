@@ -1,5 +1,6 @@
-data_root: /data/fewshot/miniImageNet--ravi
+data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
 image_size: 84
+audio_size: None
 use_memory: False
 augment: True
 augment_times: 1

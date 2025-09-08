@@ -84,7 +84,7 @@ class NetworkBlock(nn.Module):
 
 class WideResNet(nn.Module):
     def __init__(
-        self, depth, widen_factor=1, dropRate=0.0, is_flatten=True, avg_pool=True
+        self, depth, widen_factor=1, dropRate=0.0, is_flatten=True, avg_pool=True, num_channels=3
     ):
         super(WideResNet, self).__init__()
         self.is_flatten = is_flatten
@@ -100,7 +100,7 @@ class WideResNet(nn.Module):
         block = BasicBlock
         # 1st conv before any network block
         self.conv1 = nn.Conv2d(
-            3, nChannels[0], kernel_size=3, stride=1, padding=1, bias=False
+            num_channels, nChannels[0], kernel_size=3, stride=1, padding=1, bias=False
         )
         # 1st block
         self.block1 = NetworkBlock(n, nChannels[0], nChannels[1], block, 1, dropRate)

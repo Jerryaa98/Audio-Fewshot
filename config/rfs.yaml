@@ -7,7 +7,13 @@ includes:
   - classifiers/RFS.yaml
   - backbones/resnet18.yaml
 
-device_ids: 0
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
+
+
+device_ids: 1
 way_num: 5
 shot_num: 1
 query_num: 15

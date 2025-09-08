@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import itertools
-from collections import Iterable
+from collections.abc import Iterable
 
 import torch
+import numpy as np
 
 
 class GeneralCollateFunction(object):
@@ -170,6 +171,156 @@ class FewShotAugCollateFunction(object):
             )
 
             return images, global_labels
+            # images.shape = [e*w*(q+s) x c x h x w],  global_labels.shape = [e x w x (q+s)]
+        except TypeError:
+            raise TypeError(
+                "Error, probably because the transforms are passed to the dataset, the transforms should be "
+                "passed to the collate_fn"
+            )
+
+    def __call__(self, batch):
+        return self.method(batch)
+
+
+
+class FewShotAugCollateFunctionAudio(object):
+    """`Collate_fn` for few-shot dataloader.
+
+    For finetuning-val, finetuning-test and meta/metric-train/val/test.
+    """
+
+    def __init__(self, trfms, times, times_q, way_num, shot_num, query_num, mode='train'):
+        """Initialize a `FewShotAugCollateFunction`.
+
+
+        Args:
+            trfms (list or tuple of list): A torchvision transfrom list of a tuple of 2 torchvision transform list.
+            if  `list`, both support and query images will be applied the same transforms, otherwise the 1st one will
+            apply to support images and the 2nd one will apply to query images.
+            times (int): Augment times of support iamges
+            times_q (int ): Augment times of query images
+            way_num (int): Few-shot way setting
+            shot_num (int): Few-shot shot setting
+            query_num (int): Few-shot query setting
+        """
+        super(FewShotAugCollateFunctionAudio, self).__init__()
+        try:
+            self.trfms_support, self.trfms_query = trfms
+        except Exception:
+            self.trfms_support = self.trfms_query = trfms
+        # self.trfms = trfms
+        # Allow different trfms: when single T, apply to S and Q equally;
+        # When trfms=(T,T), apply to S and Q separately;
+        self.times = 1 if times == 0 else times
+        self.times_q = 1 if times_q == 0 else times_q
+        self.way_num = way_num
+        self.shot_num = shot_num
+        self.query_num = query_num
+        self.shot_aug = self.shot_num * self.times
+        self.query_aug = self.query_num * self.times_q
+        self.mode = mode
+
+    def method(self, batch):
+        """Apply transforms and augmentations on a **few-shot** batch.
+
+        The samples of query and support are augmented separately.
+        For example: if aug_times=5, then 01234 -> 0000011111222223333344444.
+
+        Args:
+            batch (list of tuple): A batch returned by a few-shot dataset.
+
+        Returns:
+            tuple: a tuple of (audios, gt_labels).
+        """
+
+        # flatten and apply trfms
+        flat_tuples_of_lists = (
+            lambda t: [arr for outer in t for tup in outer for arr in tup]
+        )
+
+        flat_list_of_lists = (
+            lambda t: [arr for sublist in t for arr in sublist]
+        )
+
+        try:
+            audios, labels = zip(
+                *batch
+            )  # audios = [img_label_tuple[0] for img_label_tuple in batch]  # 111111222222 (5s1q for example)
+            audios_split_by_label = [
+                audios[index : index + self.shot_num + self.query_num]
+                for index in range(0, len(audios), self.shot_num + self.query_num)
+            ]  # 111111; 222222 ;
+
+
+            audios_split_by_label_type = [
+                [spt_qry[: self.shot_num], spt_qry[self.shot_num :]]
+                for spt_qry in audios_split_by_label
+            ]
+            repeats_ = []
+            support_counter = 0
+            if self.mode != 'train':
+                # if self.mode == 'test':
+                #     print("in test mode")
+                audios_split_by_label_type = []
+                audios_split_by_label_type_repeats = []
+                for spt_qry in audios_split_by_label:
+                    supports = spt_qry[: self.shot_num]
+                    for i in range(len(supports)):
+                        if supports[i].shape[0] != 1:
+                            idx = np.random.randint(0, supports[i].shape[0])
+                            supports = tuple(
+                                supports[j][None, idx, :, :] if j == i else supports[j]
+                                for j in range(len(supports))
+                            )
+                        support_counter += 1
+                    
+                    queries = spt_qry[self.shot_num :]
+                    audios_split_by_label_type_repeats = [x.shape[0] for x in queries]
+                    queries = flat_list_of_lists([[x[i][None, :, :] for i in range(x.shape[0])] for x in queries])
+                    audios_split_by_label_type.append([supports, queries])
+                    repeats_.extend(audios_split_by_label_type_repeats)
+            
+
+
+            # aug support # fixme: should have a elegant method # 1111111111,1;2222222222,2 # (aug_time = 2 for example)
+            for cls in audios_split_by_label_type:
+                cls[0] = cls[0] * self.times  # aug support
+                cls[1] = cls[1] * self.times_q  # aug query
+
+           
+            audios = flat_tuples_of_lists(audios_split_by_label_type)  # 1111111111122222222222
+            if self.mode == 'train':
+                repeats_ = None
+            else:
+                repeats_ = torch.tensor(repeats_, dtype=torch.int64)
+            # images = [self.trfms(image) for image in images]  # list of tensors([c, h, w])
+            audios = [
+                self.trfms_support(audio)
+                if index % (self.shot_aug + self.query_aug) < self.shot_aug
+                else self.trfms_query(audio)
+                for index, audio in enumerate(audios)
+            ]  # list of tensors([c, h, w])
+            audios = torch.stack(audios)  # [b', c, h, w] <- b' = b after aug
+            
+
+            # labels
+            # global_labels = torch.tensor(labels,dtype=torch.int64)
+            # global_labels = torch.tensor(labels,dtype=torch.int64).reshape(self.episode_size,self.way_num,
+            # self.shot_num*self.times+self.query_num)
+            global_labels = torch.tensor(labels, dtype=torch.int64).reshape(
+                -1, self.way_num, self.shot_num + self.query_num
+            )
+            global_labels = (
+                global_labels[..., 0]
+                .unsqueeze(-1)
+                .repeat(
+                    1,
+                    1,
+                    self.shot_num * self.times + self.query_num * self.times_q,
+                )
+            )
+
+            return audios, global_labels, repeats_, support_counter
             # images.shape = [e*w*(q+s) x c x h x w],  global_labels.shape = [e x w x (q+s)]
         except TypeError:
             raise TypeError(

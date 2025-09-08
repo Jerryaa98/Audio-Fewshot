@@ -6,3 +6,4 @@ backbone:
     dropRate: 0.0
     avg_pool: True
     is_flatten: True
+    num_channels: 1

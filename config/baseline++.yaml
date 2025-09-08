@@ -11,12 +11,18 @@ includes:
 # few shot settings
 way_num: 5
 shot_num: 1
-query_num: 15
+query_num: 5
 episode_size: 1
 train_episode: 100
 test_episode: 600
 
-batch_size: 128
+batch_size: 2
+
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
+
 
 classifier:
   name: BaselinePlus
@@ -28,8 +34,8 @@ classifier:
           lr: 1e-2
       inner_train_iter: 100
       inner_batch_size: 4
-    feat_dim: 1600
-    num_class: 351
+    feat_dim: 4608
+    num_class: 38
 
 
 backbone:
@@ -40,6 +46,7 @@ backbone:
     leaky_relu: False
     negative_slope: 0.2
     last_pool: True
+    num_channels: 1
 
 # Conv64: feat_dim: 1600
 

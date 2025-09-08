@@ -15,9 +15,9 @@ classifier:
   name: MetaBaseline
 data_root: /data/fewshot/miniImageNet--ravi
 deterministic: true
-device_ids: 0,1,2,3
-n_gpu: 4
-episode_size: 4
+device_ids: 0
+n_gpu: 1
+episode_size: 1
 epoch: 100
 image_size: 84
 log_interval: 100

@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
 
-from core.data.dataset import GeneralDataset
+from core.data.dataset import GeneralDataset, GeneralAudioDataset
 from .collates import get_collate_function, get_augment_method,get_mean_std
 from .samplers import DistributedCategoriesSampler, get_sampler
 from ..utils import ModelType
@@ -17,7 +17,7 @@ from queue import Queue
 from threading import Thread
 
 
-def get_dataloader(config, mode, model_type, distribute):
+def get_dataloader(config, mode, model_type, distribute, modality='image'):
     """Get the dataloader corresponding to the model type and training phase.
 
     According to the config dict, the training phase and model category, select the appropriate transforms, set the corresponding sampler and collate_fn, and return the corresponding dataloader.
@@ -37,23 +37,36 @@ def get_dataloader(config, mode, model_type, distribute):
     # Add user's trfms in get_augment_method()
 
     #get mean std
-    MEAN,STD=get_mean_std(config, mode)
+    MEAN,STD=get_mean_std(config, mode, modality)
     
-    trfms_list = get_augment_method(config, mode)
-
-    trfms_list.append(transforms.ToTensor())
+    trfms_list = get_augment_method(config, mode, modality)
+    if modality == 'image':
+        trfms_list.append(transforms.ToTensor())
+    else:
+        trfms_list.append(transforms.Lambda(lambda x: torch.from_numpy(x).float()))
     trfms_list.append(transforms.Normalize(mean=MEAN, std=STD))
-    trfms = transforms.Compose(trfms_list)
+    if len(trfms_list) != 0:
+        trfms = transforms.Compose(trfms_list)
+    else:
+        trfms = None
 
-    dataset = GeneralDataset(
-        data_root=config["data_root"],
-        mode=mode,
-        use_memory=config["use_memory"],
-    )
+    if modality == 'image':
+        dataset = GeneralDataset(
+            data_root=config["data_root"],
+            mode=mode,
+            use_memory=config["use_memory"],
+        )
+    else:
+        dataset = GeneralAudioDataset(
+            data_root=config["data_root"],
+            mode=mode,
+            use_memory=config["use_memory"],
+            class_per_split_file=config["class_per_split"]
+        )
 
     if config["dataloader_num"] == 1 or mode in ["val", "test"]:
 
-        collate_function = get_collate_function(config, trfms, mode, model_type)
+        collate_function = get_collate_function(config, trfms, mode, model_type, modality)
 
         few_shot = not (model_type == ModelType.FINETUNING and mode == "train")
 
@@ -83,7 +96,7 @@ def get_dataloader(config, mode, model_type, distribute):
             shuffle=False if few_shot or distribute else True,
             num_workers=workers,  # num_workers for each gpu
             drop_last=False if few_shot else True,
-            pin_memory=True,
+            pin_memory=False,
             collate_fn=collate_function,
         )
 

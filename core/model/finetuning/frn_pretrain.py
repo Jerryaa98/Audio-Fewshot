@@ -14,7 +14,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .finetuning_model import FinetuningModel
 
 
@@ -77,9 +77,11 @@ class FRNLayer(nn.Module):
             # correspond to Equation 10 in the paper
 
             sts = st.matmul(support)  # n, way, d, d
-            m_inv = (
-                sts + torch.eye(sts.size(-1)).to(sts.device).unsqueeze(0).mul(lam)
-            ).inverse()  # n, way, d, d
+            # m_inv = (
+            #     sts + torch.eye(sts.size(-1)).to(sts.device).unsqueeze(0).mul(lam)
+            # ).inverse()  # n, way, d, d
+            A = sts + torch.eye(sts.size(-1)).to(sts.device).unsqueeze(0).mul(lam)
+            m_inv = torch.stack([M.inverse() for M in A])
             hat = m_inv.matmul(sts)  # n, way, d, d
 
         else:
@@ -123,15 +125,21 @@ class FRN_Pretrain(FinetuningModel):
         self.loss_func = nn.NLLLoss().cuda()
 
     def set_forward(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
-        episode_size = image.size(0) // (
-            self.way_num * (self.shot_num + self.query_num)
-        )
+        
         feat = self.emb_func(image)
         feat = feat / np.sqrt(640)
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=3
+            feat, mode=3, repeats=repeats, support_size=support_size
+        )
+        episode_size = (support_feat.size(0) + repeats.sum().item()) // (
+            self.way_num * (self.shot_num + self.query_num)
         )
         _, c, h, w = support_feat.size()
         support_feat = (
@@ -153,7 +161,12 @@ class FRN_Pretrain(FinetuningModel):
         return output, acc
 
     def set_forward_loss(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image, global_target = image.to(self.device), global_target.to(self.device)
         episode_size = image.size(0) // (
             self.way_num * (self.shot_num + self.query_num)
@@ -168,7 +181,12 @@ class FRN_Pretrain(FinetuningModel):
         return output, acc, loss
     
     def meta_set_forward(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
         episode_size = image.size(0) // (
             self.way_num * (self.shot_num + self.query_num)

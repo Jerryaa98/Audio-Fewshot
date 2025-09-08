@@ -283,10 +283,10 @@ class BasicBlockVariant(nn.Module):
 class resnet(nn.Module):
 
     def __init__(self, block, n_blocks, keep_prob=1.0, avg_pool=False, drop_rate=0.0,
-                 dropblock_size=5, num_classes=-1, use_se=False, reduce_dim=640):
+                 dropblock_size=5, num_classes=-1, use_se=False, reduce_dim=640, num_channels=3):
         super(resnet, self).__init__()
 
-        self.inplanes = 3
+        self.inplanes = num_channels
         self.use_se = use_se
         self.layer1 = self._make_layer(block, n_blocks[0], 64,
                                        stride=2, drop_rate=drop_rate)

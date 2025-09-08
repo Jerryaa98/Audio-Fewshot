@@ -1,5 +1,5 @@
 includes:
-  - headers/data.yaml
+  - headers/data_0.yaml
   - headers/device.yaml
   - headers/misc.yaml
   - headers/model.yaml
@@ -7,11 +7,15 @@ includes:
   - classifiers/FEAT.yaml
   - backbones/WRN.yaml
 
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: False
 
 classifier:
   name: FEAT
   kwargs:
-    hdim: 1600
+    hdim: 4608
     temperature: 1.0
     temperature2: 1.0
     balance: 0.5
@@ -25,6 +29,7 @@ backbone:
     leaky_relu: False
     negative_slope: 0.2
     last_pool: True
+    num_channels: 1
 
 # Conv64: feat_dim: 1600
 

@@ -27,6 +27,7 @@ class Conv64F(nn.Module):
         last_pool=True,
         maxpool_last2=True,
         use_running_statistics=True,
+        num_channels=3,
     ):
         super(Conv64F, self).__init__()
 
@@ -41,7 +42,7 @@ class Conv64F(nn.Module):
             activation = nn.ReLU(inplace=True)
 
         self.layer1 = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(num_channels, 64, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(64, track_running_stats=use_running_statistics),
             activation,
             nn.MaxPool2d(kernel_size=2, stride=2),
@@ -104,6 +105,7 @@ class Conv32F(nn.Module):
         leaky_relu=False,
         negative_slope=0.2,
         last_pool=True,
+        num_channels=3
     ):
         super(Conv32F, self).__init__()
 
@@ -117,7 +119,7 @@ class Conv32F(nn.Module):
             activation = nn.ReLU(inplace=True)
 
         self.layer1 = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(num_channels, 32, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(32),
             activation,
             nn.MaxPool2d(kernel_size=2, stride=2),

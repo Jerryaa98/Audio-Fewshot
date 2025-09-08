@@ -3,6 +3,8 @@ from .autoaugment import ImageNetPolicy
 from .cutout import Cutout
 from .randaugment import RandAugment
 from torchvision import transforms
+import numpy as np
+
 
 CJ_DICT = {"brightness": 0.4, "contrast": 0.4, "saturation": 0.4}
 
@@ -10,6 +12,7 @@ CJ_DICT = {"brightness": 0.4, "contrast": 0.4, "saturation": 0.4}
 def get_augment_method(
     config,
     mode,
+    modality='image'
 ):
     """Return the corresponding augmentation method according to the setting.
 
@@ -29,70 +32,75 @@ def get_augment_method(
     """
     if mode == "train" and config["augment"]:
         # Add user's trfms here
-        if "augment_method" not in config or config["augment_method"] == "NormalAug":
-            trfms_list = get_default_image_size_trfms(config["image_size"])
-            trfms_list += [
-                transforms.ColorJitter(**CJ_DICT),
-                transforms.RandomHorizontalFlip(),
-            ]
-        elif config["augment_method"] == "AutoAugment":
-            trfms_list = get_default_image_size_trfms(config["image_size"])
-            trfms_list += [ImageNetPolicy()]
-        elif config["augment_method"] == "Cutout":
-            trfms_list = get_default_image_size_trfms(config["image_size"])
-            trfms_list += [Cutout()]
-        elif config["augment_method"] == "RandAugment":
-            trfms_list = get_default_image_size_trfms(config["image_size"])
-            trfms_list += [RandAugment()]
-        elif config["augment_method"] == "MTLAugment":  
-            trfms_list = get_default_image_size_trfms(config["image_size"])
-            # https://github.com/yaoyao-liu/meta-transfer-learning/blob/fe189c96797446b54a0ae1c908f8d92a6d3cb831/pytorch/dataloader/dataset_loader.py#L60
-            trfms_list += [transforms.CenterCrop(80), transforms.RandomHorizontalFlip()]
-        elif config["augment_method"] == "DeepBdcAugment":
-            # https://github.com/Fei-Long121/DeepBDC/blob/main/data/datamgr.py#23
-            trfms_list = [
-                transforms.RandomResizedCrop(config["image_size"]),
-                transforms.RandomHorizontalFlip(),
-                transforms.ColorJitter(**CJ_DICT),
-            ]
-        elif config["augment_method"] == "S2M2Augment":
-            trfms_list = [
-                transforms.RandomResizedCrop(config["image_size"]),
-                transforms.RandomHorizontalFlip(),
-                transforms.ColorJitter(**CJ_DICT),
-            ]
-        elif config["augment_method"] == "DSNAugment":
-            trfms_list = [
-                transforms.RandomResizedCrop(config["image_size"]),
-                transforms.RandomHorizontalFlip(),
-                transforms.ColorJitter(**CJ_DICT),
-            ]
+        if modality == 'image':
+            if "augment_method" not in config or config["augment_method"] == "NormalAug":
+                trfms_list = get_default_image_size_trfms(config["image_size"])
+                trfms_list += [
+                    transforms.ColorJitter(**CJ_DICT),
+                    transforms.RandomHorizontalFlip(),
+                ]
+            elif config["augment_method"] == "AutoAugment":
+                trfms_list = get_default_image_size_trfms(config["image_size"])
+                trfms_list += [ImageNetPolicy()]
+            elif config["augment_method"] == "Cutout":
+                trfms_list = get_default_image_size_trfms(config["image_size"])
+                trfms_list += [Cutout()]
+            elif config["augment_method"] == "RandAugment":
+                trfms_list = get_default_image_size_trfms(config["image_size"])
+                trfms_list += [RandAugment()]
+            elif config["augment_method"] == "MTLAugment":  
+                trfms_list = get_default_image_size_trfms(config["image_size"])
+                # https://github.com/yaoyao-liu/meta-transfer-learning/blob/fe189c96797446b54a0ae1c908f8d92a6d3cb831/pytorch/dataloader/dataset_loader.py#L60
+                trfms_list += [transforms.CenterCrop(80), transforms.RandomHorizontalFlip()]
+            elif config["augment_method"] == "DeepBdcAugment":
+                # https://github.com/Fei-Long121/DeepBDC/blob/main/data/datamgr.py#23
+                trfms_list = [
+                    transforms.RandomResizedCrop(config["image_size"]),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ColorJitter(**CJ_DICT),
+                ]
+            elif config["augment_method"] == "S2M2Augment":
+                trfms_list = [
+                    transforms.RandomResizedCrop(config["image_size"]),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ColorJitter(**CJ_DICT),
+                ]
+            elif config["augment_method"] == "DSNAugment":
+                trfms_list = [
+                    transforms.RandomResizedCrop(config["image_size"]),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ColorJitter(**CJ_DICT),
+                ]
+            else:
+                trfms_list = get_default_image_size_trfms(config["image_size"])
+                trfms_list += [
+                    transforms.ColorJitter(**CJ_DICT),
+                    transforms.RandomHorizontalFlip(),
+                ]
         else:
-            trfms_list = get_default_image_size_trfms(config["image_size"])
-            trfms_list += [
-                transforms.ColorJitter(**CJ_DICT),
-                transforms.RandomHorizontalFlip(),
-            ]
-            
+            trfms_list = [] # identity transform for audio      
     else:
-        if config["image_size"] == 224:
-            trfms_list = [
-                transforms.Resize((256, 256)),
-                transforms.CenterCrop((224, 224)),
-            ]
-        elif config["image_size"] == 84:
-            trfms_list = [
-                transforms.Resize((96, 96)),
-                transforms.CenterCrop((84, 84)),
-            ]
-        # for MTL -> alternative solution: use avgpool(ks=11)
-        elif config["image_size"] == 80:
-            trfms_list = [
-                transforms.Resize((92, 92)),
-                transforms.CenterCrop((80, 80)),
-            ]
+        if modality == 'image':
+            if config["image_size"] == 224:
+                trfms_list = [
+                    transforms.Resize((256, 256)),
+                    transforms.CenterCrop((224, 224)),
+                ]
+            elif config["image_size"] == 84:
+                trfms_list = [
+                    transforms.Resize((96, 96)),
+                    transforms.CenterCrop((84, 84)),
+                ]
+            # for MTL -> alternative solution: use avgpool(ks=11)
+            elif config["image_size"] == 80:
+                trfms_list = [
+                    transforms.Resize((92, 92)),
+                    transforms.CenterCrop((80, 80)),
+                ]
+            else:
+                raise RuntimeError
         else:
-            raise RuntimeError
+            trfms_list = [] # identity transform for audio  
 
     return trfms_list
 
@@ -125,6 +133,7 @@ def get_default_image_size_trfms(image_size):
 def get_mean_std(
     config,
     mode,
+    modality='image',
 ):
     """Return the corresponding mean and std according to the setting.
 
@@ -138,13 +147,20 @@ def get_mean_std(
         
     """
 
-    MEAN = [120.39586422 / 255.0, 115.59361427 / 255.0, 104.54012653 / 255.0]
-    STD = [70.68188272 / 255.0, 68.27635443 / 255.0, 72.54505529 / 255.0]
-    
-    if "augment_method" not in config or config["augment_method"] == "NormalAug":
+    if modality == 'image':
         MEAN = [120.39586422 / 255.0, 115.59361427 / 255.0, 104.54012653 / 255.0]
         STD = [70.68188272 / 255.0, 68.27635443 / 255.0, 72.54505529 / 255.0]
-    elif config["augment_method"]== "S2M2Augment":
-        MEAN= [0.485, 0.456, 0.406]
-        STD=[0.229, 0.224, 0.225]
-    return MEAN,STD
+        
+        if "augment_method" not in config or config["augment_method"] == "NormalAug":
+            MEAN = [120.39586422 / 255.0, 115.59361427 / 255.0, 104.54012653 / 255.0]
+            STD = [70.68188272 / 255.0, 68.27635443 / 255.0, 72.54505529 / 255.0]
+        elif config["augment_method"]== "S2M2Augment":
+            MEAN= [0.485, 0.456, 0.406]
+            STD=[0.229, 0.224, 0.225]
+        return MEAN,STD
+    else:
+        temp = np.load(config["mean_std_file"])
+        MEAN, STD = temp.flatten().tolist()
+        MEAN = [MEAN]
+        STD = [STD]
+        return MEAN, STD
