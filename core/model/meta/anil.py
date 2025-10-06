@@ -35,7 +35,7 @@ class ANILLayer(nn.Module):
 
 
 def vote_catagorical_acc(targets, predictions):
-    return (predictions == targets).sum().float() / targets.size(0)
+    return (predictions == targets).sum().float() / targets.size(0) * 100.0
 
 
 def majority_vote(soft_logits, query_nums):

@@ -13,10 +13,20 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from core.model.metric.metric_model import MetricModel
-from core.utils import majority_vote, vote_catagorical_acc
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 
 
 def rearrange_data(data, num_classes, k):
+    n = len(data)
+    # print(n, data)
+    rearranged_data = [[] for _ in range(n)]
+    # print(rearranged_data)
+    for i in range(n):
+        new_index = (i // k) + (i % k) * num_classes
+        rearranged_data[new_index] = data[i]
+    return rearranged_data
+
+def rearrange_data_old(data, num_classes, k):
     n = len(data)
     rearranged_data = torch.empty_like(data)
     for i in range(n):
@@ -75,7 +85,7 @@ class CPEALayer(nn.Module):
         self.fc1 = Mlp(in_features=in_dim, hidden_features=int(in_dim / 4), out_features=in_dim)
         self.fc_norm1 = nn.LayerNorm(in_dim)
 
-        self.fc2 = Mlp(in_features=196**2, hidden_features=256, out_features=1)
+        self.fc2 = Mlp(in_features=72**2, hidden_features=256, out_features=1)
 
     def forward(self, feat_query, feat_shot, shot):
         # query: Q x n x C
@@ -112,6 +122,8 @@ class CPEALayer(nn.Module):
             tmp_query = tmp_query.unsqueeze(0)  # 1 x n x C
             out = torch.matmul(feat_shot, tmp_query.transpose(1, 2))  # S x L x L
             out = out.flatten(1)  # S x L*L
+            # print(out.shape)
+            # input()
             out = self.fc2(out.pow(2))  # S x 1
             out = out.transpose(0, 1)  # 1 x S
             results.append(out)
@@ -126,13 +138,65 @@ class CPEANet(MetricModel):
         self.loss_func = SmoothCELoss()
 
     def set_forward(self, batch):
-        if torch.cuda.is_available():
-            data, _ = [_.cuda() for _ in batch]
+        # if torch.cuda.is_available():
+        #     data, _ = [_.cuda() for _ in batch]
+        # else:
+        #     data = batch[0]
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
         else:
-            data = batch[0]
-        data = rearrange_data(data, self.way_num, self.shot_num + self.query_num)
+            image, target, repeats, support_size = batch
+        if repeats is None or repeats.sum().item() == self.query_num * self.way_num:
+            data = rearrange_data(image, self.way_num, self.shot_num + self.query_num)
+        else:
+            cnt = 0
+            tmp = []
+            repeat_counter = []
+            idx = []
+            for i in range(0, len(repeats), self.query_num):
+                repeat_counter.extend([1 for _ in range(self.shot_num)])
+                tmp.extend(image[cnt:cnt + self.shot_num])
+                idx.extend([-1 for _ in range(self.shot_num)])
+                cnt += self.shot_num
+                for j in range(i, i+self.query_num):
+                    tmp.extend(image[cnt:cnt + 1])
+                    idx.append(cnt)
+                    cnt += repeats[j].item()
+                    repeat_counter.extend([repeats[j].item()])
+            data = rearrange_data(tmp, self.way_num, self.shot_num + self.query_num)
+            repeats_tmp = rearrange_data(repeat_counter, self.way_num, self.shot_num + self.query_num)
+            idx_repeats = rearrange_data(idx, self.way_num, self.shot_num + self.query_num)
+            data = torch.stack(data).to(self.device)
+            data = torch.repeat_interleave(data, torch.tensor(repeats_tmp).to(torch.long).to('cuda'), dim=0)
+            cnt = 0
+            for i in range(len(idx_repeats)):
+                if repeats_tmp[i] != 1:
+                    data[cnt:cnt + repeats_tmp[i]] = image[idx_repeats[i] : idx_repeats[i] + repeats_tmp[i]]
+                cnt += repeats_tmp[i]
+                
         p = self.shot_num * self.way_num
         data_shot, data_query = data[:p], data[p:]
+        if type(data_shot) is list:
+            data_shot = torch.stack(data_shot).to(self.device)
+        if type(data_query) is list:
+            try:
+                data_query = torch.stack(data_query).to(self.device)
+            except Exception as e:
+                print(repeats, len(repeats), repeats.sum())
+                print(support_size)
+                print(p)
+                print(self.shot_num)
+                print(self.way_num)
+                print(self.query_num)
+                print(image.shape)
+                print(type(data_query))
+                # print(data_query)
+                print(len(data_query))
+                print([x.shape for x in data_query])
+        # print(type(data_shot))
+        # print(type(data_query))
         # step = data.shape[0] // (self.way_num*self.shot_num)
         # data_shot = data[::step]
         # data_query = []
@@ -145,16 +209,30 @@ class CPEANet(MetricModel):
         results = self.CPEA(feat_query, feat_shot, self.shot_num)
         results = [torch.mean(idx, dim=0, keepdim=True) for idx in results]
         results = torch.cat(results, dim=0)  # Q x S
+        
+        pre_query_pred = majority_vote(results, repeats).to('cuda', dtype=torch.long)
+        # post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        
         label = torch.arange(self.way_num).repeat(self.query_num).long().to(self.device)
         # label = torch.arange(self.way_num).repeat_interleave(self.query_num).to(self.device)
-        acc = 100 * accuracy(results.data, label)
+        # acc = 100 * accuracy(results.data, label)
+        acc = vote_catagorical_acc(label.to('cuda'), pre_query_pred.to('cuda'))
+        
         return results, acc
 
     def set_forward_loss(self, batch):
-        if torch.cuda.is_available():
-            data, _ = [_.cuda() for _ in batch]
+        if len(batch) == 2:
+            data, target = batch
+            repeats = None
+            support_size = 0
         else:
-            data = batch[0]
+            data, target, repeats, support_size = batch
+        # print(data.shape)
+        # input()
+        # if torch.cuda.is_available():
+        #     data, _ = [_.cuda() for _ in batch]
+        # else:
+        #     data = batch[0]
 
         data = rearrange_data(data, self.way_num, self.shot_num + self.query_num)
         p = self.shot_num * self.way_num
@@ -165,9 +243,16 @@ class CPEANet(MetricModel):
         # for i in range(len(data)):
         #     if i % step != 0:
         #         data_query.append(data[i])
-        # data_query = torch.stack(data_query).to(self.device)
-        # data_shot = data_shot.to(self.device)
+        data_query = torch.stack(data_query).to(self.device)
+        data_shot = torch.stack(data_shot).to(self.device)
+        data_shot = data_shot.to(self.device)
+        # print(data_shot.shape)
+        # print(data_query.shape)
+        # input()
         feat_shot, feat_query = self.emb_func(data_shot), self.emb_func(data_query)
+        # print(feat_shot.shape)
+        # print(feat_query.shape)
+        # input()
         results = self.CPEA(feat_query, feat_shot, self.shot_num)
         results = [torch.mean(idx, dim=0, keepdim=True) for idx in results]
         results = torch.cat(results, dim=0)  # Q x S

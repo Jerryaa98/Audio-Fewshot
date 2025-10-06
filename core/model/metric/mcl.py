@@ -13,7 +13,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .metric_model import MetricModel
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 
 
 def _l2norm(x, dim=1, keepdim=True):
@@ -176,24 +176,41 @@ class MCL(MetricModel):
         self.loss_func = nn.NLLLoss()
 
     def set_forward(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
         episode_size = image.size(0) // (
             self.way_num * (self.shot_num + self.query_num)
         )
         feat = self.emb_func(image)
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=2
+            feat, mode=2, repeats=repeats, support_size=support_size
         )
-        output = self.mcl_layer(
-            support_feat, support_target, query_feat, query_target, self.way_num, self.shot_num,
-        ).view(episode_size * self.way_num * self.query_num, self.way_num)
-        acc = accuracy(output, query_target.reshape(-1))
+        output = []
+        for i in range(len(query_feat)):
+            output.append(self.mcl_layer(
+                support_feat[i].unsqueeze(0), support_target, query_feat[i].unsqueeze(0), query_target[i], self.way_num, self.shot_num,
+            ).reshape(-1, self.way_num))
+        output = torch.cat(output, dim=0)
+        # acc = accuracy(output, query_target.reshape(-1))
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
 
         return output, acc
 
     def set_forward_loss(self, batch):
-        image, global_target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
         episode_size = image.size(0) // (
             self.way_num * (self.shot_num + self.query_num)

@@ -200,9 +200,12 @@ class AbstractModel(nn.Module):
 
         if mode == 1:  # input 2D, return 3D(with episode) E.g.ANIL & R2D2
             if repeats is None:
+                # print(features.shape)
                 features = features.contiguous().view(
                     episode_size, self.way_num, self.shot_num + self.query_num, -1
                 )
+                # print(features.shape)
+                # input()
                 support_features = (
                     features[:, :, : self.shot_num, :]
                     .contiguous()
@@ -230,6 +233,7 @@ class AbstractModel(nn.Module):
                         else:
                             support_features.append(features[cnt+size_per_n_way_per_episode[i][j-1]:cnt+size_per_n_way_per_episode[i][j-1] + self.shot_num])
                             query_features_temp.append(features[cnt+size_per_n_way_per_episode[i][j-1] + self.shot_num:cnt+size_per_n_way_per_episode[i][j] + self.shot_num])
+                        cnt += self.shot_num
                     query_features.append(torch.vstack(query_features_temp))
                 
                 support_features = (
@@ -237,13 +241,18 @@ class AbstractModel(nn.Module):
                     .contiguous()
                     .view(episode_size, self.way_num * self.shot_num, -1)
                 )
-                
+                # print('Support features: ', [x[0][0][-1] for x in support_features])
+                # print('Query features: ', [x[0][0][-1] for x in query_features])
+                # exit()
+
+
             support_target = local_labels[:, :, : self.shot_num].reshape(
                 episode_size, self.way_num * self.shot_num
             )
             query_target = local_labels[:, :, self.shot_num :].reshape(
                 episode_size, self.way_num * self.query_num
             )
+            
             
                     
 
@@ -336,6 +345,7 @@ class AbstractModel(nn.Module):
                         else:
                             support_features.append(features[cnt+size_per_n_way_per_episode[i][j-1]:cnt+size_per_n_way_per_episode[i][j-1] + self.shot_num])
                             query_features_temp.append(features[cnt+size_per_n_way_per_episode[i][j-1] + self.shot_num:cnt+size_per_n_way_per_episode[i][j] + self.shot_num])
+                        cnt += self.shot_num
                     query_features.append(torch.vstack(query_features_temp))
 
             

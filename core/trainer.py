@@ -30,7 +30,7 @@ from core.utils import (
     data_prefetcher,
     GradualWarmupScheduler,
 )
-
+import torch.optim as optim
 
 class Trainer(object):
     """
@@ -80,8 +80,8 @@ class Trainer(object):
                 self.train_loader[0].sampler.set_epoch(epoch_idx)
             print("============ Train on the train set ============")
             print("learning rate: {}".format(self.scheduler.get_last_lr()))
-            train_acc = self._train(epoch_idx)
-            print(" * Acc@1 {:.3f} ".format(train_acc))
+            train_acc, train_loss = self._train(epoch_idx)
+            print(" * Acc@1 {:.3f} Loss {:.3f}".format(train_acc, train_loss))
             if ((epoch_idx + 1) % self.val_per_epoch) == 0:
                 print("============ Validation on the val set ============")
                 val_acc = self._validate(epoch_idx, is_test=False)
@@ -97,7 +97,7 @@ class Trainer(object):
                 )
             time_scheduler = self._cal_time_scheduler(experiment_begin, epoch_idx)
             print(" * Time: {}".format(time_scheduler))
-            self.scheduler.step()
+            self.scheduler.step(train_loss)
 
             if self.rank == 0:
                 if ((epoch_idx + 1) % self.val_per_epoch) == 0:
@@ -149,7 +149,7 @@ class Trainer(object):
         end = time()
         log_scale = 1 if self.model_type == ModelType.FINETUNING else episode_size
         for batch_idx, batch in enumerate(zip(*self.train_loader)):
-            print(batch[0][0].shape)
+            # print(batch[0][0].shape)
             if self.rank == 0:
                 self.writer.set_step(
                     epoch_idx * max(map(len, self.train_loader))
@@ -218,7 +218,7 @@ class Trainer(object):
                 print(info_str)
             end = time()
 
-        return meter.avg("acc1")
+        return meter.avg("acc1"), meter.avg("loss")
 
     def _validate(self, epoch_idx, is_test=False):
         """
@@ -481,7 +481,9 @@ class Trainer(object):
             return model, model.module.model_type
         else:
             model = model.to(self.rank)
-
+            # print(model.model_type)
+            # input()
+            
             return model, model.model_type
 
     def _init_optim(self, config):
@@ -542,6 +544,12 @@ class Trainer(object):
         optimizer = get_instance(
             torch.optim, "optimizer", config, params=params_dict_list
         )
+        # scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,
+        #                                 mode='min',
+        #                                 patience=config['lr_scheduler']['kwargs']['patience'],
+        #                                 factor=config['lr_scheduler']['kwargs']['factor'],
+        #                                 min_lr=config['lr_scheduler']['kwargs']['min_lr'])
+
         scheduler = GradualWarmupScheduler(
             optimizer, self.config
         )  # if config['warmup']==0, scheduler will be a normal lr_scheduler, jump into this class for details

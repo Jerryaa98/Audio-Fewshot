@@ -250,7 +250,11 @@ class FewShotAugCollateFunctionAudio(object):
                 audios[index : index + self.shot_num + self.query_num]
                 for index in range(0, len(audios), self.shot_num + self.query_num)
             ]  # 111111; 222222 ;
-
+            
+            # print(type(audios))
+            # print(len(audios))
+            # print(len(audios_split_by_label[0]))
+            # exit()
 
             audios_split_by_label_type = [
                 [spt_qry[: self.shot_num], spt_qry[self.shot_num :]]
@@ -258,13 +262,19 @@ class FewShotAugCollateFunctionAudio(object):
             ]
             repeats_ = []
             support_counter = 0
+            # helper_counter = 0
             if self.mode != 'train':
                 # if self.mode == 'test':
                 #     print("in test mode")
                 audios_split_by_label_type = []
                 audios_split_by_label_type_repeats = []
                 for spt_qry in audios_split_by_label:
+                    # print(type(spt_qry))
+                    
+                    # indices = torch.arange(len(spt_qry)) + helper_counter
+                    # helper_counter += len(spt_qry)
                     supports = spt_qry[: self.shot_num]
+                    # supports = tuple([np.concatenate([x, np.repeat(indices[: self.shot_num].reshape(self.shot_num, 1, 1), 128, axis=1)], axis=-1) for x in supports])
                     for i in range(len(supports)):
                         if supports[i].shape[0] != 1:
                             idx = np.random.randint(0, supports[i].shape[0])
@@ -275,6 +285,7 @@ class FewShotAugCollateFunctionAudio(object):
                         support_counter += 1
                     
                     queries = spt_qry[self.shot_num :]
+                    # queries = [np.concatenate([x, np.repeat(indices[self.shot_num :].reshape(self.shot_num, 1, 1), 128, axis=1)], axis=-1) for x in queries]
                     audios_split_by_label_type_repeats = [x.shape[0] for x in queries]
                     queries = flat_list_of_lists([[x[i][None, :, :] for i in range(x.shape[0])] for x in queries])
                     audios_split_by_label_type.append([supports, queries])

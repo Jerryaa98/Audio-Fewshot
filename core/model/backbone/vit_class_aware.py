@@ -233,13 +233,14 @@ class VisionTransformer(nn.Module):
         init_values=0,
         use_mean_pooling=False,
         masked_im_modeling=False,
+        num_channels=3
     ):
         super().__init__()
         self.num_features = self.embed_dim = embed_dim
         self.return_all_tokens = return_all_tokens
 
         self.patch_embed = PatchEmbed(
-            img_size=img_size[0], patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim
+            img_size=img_size[0], patch_size=patch_size, in_chans=num_channels, embed_dim=embed_dim
         )
         num_patches = self.patch_embed.num_patches
 

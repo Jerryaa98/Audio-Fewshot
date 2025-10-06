@@ -30,6 +30,7 @@ def get_sampler(dataset, few_shot, distribute, mode, config):
             )
         else:
             if (('ood' in config and not config['ood']) or ('ood' not in config)) or (mode != 'test' and config['ood']):
+                print('using iid sampler')
                 sampler = CategoriesSampler(
                     label_list=dataset.label_list,
                     label_num=dataset.label_num,
@@ -45,6 +46,7 @@ def get_sampler(dataset, few_shot, distribute, mode, config):
                     else config["test_shot"] + config["test_query"],
                 )
             else:
+                print('using ood sampler')
                 sampler = CategoriesSamplerOOD(
                     label_list=dataset.label_list,
                     label_num=dataset.label_num,
@@ -283,6 +285,8 @@ class CategoriesSamplerOOD(Sampler):
         Yields:
             torch.Tensor: The stacked tensor of a FSL task batch(multi-task).
         """
+        # print('in ood')
+        # input()
         batch = []
         for i_batch in range(self.episode_num):
             classes = torch.randperm(len(self.idx_list))[: self.way_num]
@@ -290,37 +294,40 @@ class CategoriesSamplerOOD(Sampler):
                 team_a = torch.tensor(self.class_background_groups[self.class_to_label[c.item()]]['team_a'])
                 team_b = torch.tensor(self.class_background_groups[self.class_to_label[c.item()]]['team_b'])
                 
-                # Create support set: Handle cases where team sizes are insufficient
-                if len(team_a) < self.k_shot and len(team_b) >= self.k_shot:
-                    # If team_a is insufficient, take support from team_b
-                    support = torch.randperm(team_b.size(0))[:self.k_shot]
-                    batch.append(team_b[support])
-                elif len(team_a) < self.k_shot:
-                    # Combine both teams to get enough samples
-                    combined = torch.hstack((team_a,team_b))
-                    support = torch.randperm(combined.size(0))[:min(self.k_shot, len(combined))]
-                    batch.append(combined[support])
-                    support = combined.sample(min(self.k_shot, len(combined)))
-                else:
-                    # Normal case: support from team_a
-                    batch.append(team_a[:self.k_shot])
+                batch.append(team_a[torch.randperm(team_a.size(0))[:self.k_shot]])
+                batch[-1] = torch.cat((batch[-1], team_b[torch.randperm(team_b.size(0))[:self.q_query]]))
+                
+                # # Create support set: Handle cases where team sizes are insufficient
+                # if len(team_a) < self.k_shot and len(team_b) >= self.k_shot:
+                #     # If team_a is insufficient, take support from team_b
+                #     support = torch.randperm(team_b.size(0))[:self.k_shot]
+                #     batch.append(team_b[support])
+                # elif len(team_a) < self.k_shot:
+                #     # Combine both teams to get enough samples
+                #     combined = torch.hstack((team_a,team_b))
+                #     support = torch.randperm(combined.size(0))[:min(self.k_shot, len(combined))]
+                #     batch.append(combined[support])
+                #     support = combined.sample(min(self.k_shot, len(combined)))
+                # else:
+                #     # Normal case: support from team_a
+                #     batch.append(team_a[:self.k_shot])
 
-                # Create query set: Handle cases where team sizes are insufficient
-                query_pool = team_b[~torch.isin((team_b), batch[len(batch)-1])]
-                if query_pool.size(0) >= self.q_query:
-                    # Ideal case: all query samples from team_b
-                    idx = torch.randperm(len(query_pool))[:self.q_query]
-                    batch[len(batch)-1] = torch.cat((batch[len(batch)-1], query_pool[idx]))
-                else:
-                    # Need to supplement with team_a samples
-                    remaining = self.q_query - len(query_pool)
-                    query_a_pool = team_a[~torch.isin(team_a, batch[len(batch)-1])]
+                # # Create query set: Handle cases where team sizes are insufficient
+                # query_pool = team_b[~torch.isin((team_b), batch[len(batch)-1])]
+                # if query_pool.size(0) >= self.q_query:
+                #     # Ideal case: all query samples from team_b
+                #     idx = torch.randperm(len(query_pool))[:self.q_query]
+                #     batch[len(batch)-1] = torch.cat((batch[len(batch)-1], query_pool[idx]))
+                # else:
+                #     # Need to supplement with team_a samples
+                #     remaining = self.q_query - len(query_pool)
+                #     query_a_pool = team_a[~torch.isin(team_a, batch[len(batch)-1])]
                     
-                    if remaining > 0 and len(query_a_pool) > 0:
-                        idx = torch.randperm(len(query_a_pool))[:remaining]
-                        batch[len(batch)-1] = torch.cat((batch[len(batch)-1], torch.cat((query_pool, query_a_pool[idx]))))
-                    else:
-                        batch[len(batch)-1] = torch.cat((batch[len(batch)-1], query_pool))
+                #     if remaining > 0 and len(query_a_pool) > 0:
+                #         idx = torch.randperm(len(query_a_pool))[:remaining]
+                #         batch[len(batch)-1] = torch.cat((batch[len(batch)-1], torch.cat((query_pool, query_a_pool[idx]))))
+                #     else:
+                #         batch[len(batch)-1] = torch.cat((batch[len(batch)-1], query_pool))
             
             if len(batch) == self.episode_size * self.way_num:
                 batch = torch.hstack(batch).reshape(-1)

@@ -4,10 +4,10 @@ import torch.nn as nn
 
 class Conv64F_MCL(nn.Module):
     """docstring for ClassName"""
-    def __init__(self):
+    def __init__(self, num_channels=3):
         super(Conv64F_MCL, self).__init__()
         self.layer1 = nn.Sequential(
-                        nn.Conv2d(3,64,kernel_size=3,padding=1,bias=False),
+                        nn.Conv2d(num_channels,64,kernel_size=3,padding=1,bias=False),
                         nn.BatchNorm2d(64),
                         nn.LeakyReLU(0.2, True),
                         nn.MaxPool2d(kernel_size=2, stride=2))

@@ -378,6 +378,9 @@ class GeneralAudioDataset(Dataset):
 
         if self.mode == 'train':
             idx = np.random.randint(data.shape[0])
-            return data[idx][np.newaxis, :, :], label
+            x = (data[idx] - self.kwargs.get('stats', [0])[0]) / (self.kwargs.get('stats', [None,1])[1] + 1e-8)
+            return x[np.newaxis, :, :], label
         else:
-            return data, label
+            # idx = np.random.randint(data.shape[0])
+            x = (data - self.kwargs.get('stats', [0])[0]) / (self.kwargs.get('stats', [None,1])[1] + 1e-8)
+            return x, label

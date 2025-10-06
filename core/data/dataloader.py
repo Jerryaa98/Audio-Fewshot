@@ -44,7 +44,7 @@ def get_dataloader(config, mode, model_type, distribute, modality='image'):
         trfms_list.append(transforms.ToTensor())
     else:
         trfms_list.append(transforms.Lambda(lambda x: torch.from_numpy(x).float()))
-    trfms_list.append(transforms.Normalize(mean=MEAN, std=STD))
+    # trfms_list.append(transforms.Normalize(mean=MEAN, std=STD))
     if len(trfms_list) != 0:
         trfms = transforms.Compose(trfms_list)
     else:
@@ -61,7 +61,8 @@ def get_dataloader(config, mode, model_type, distribute, modality='image'):
             data_root=config["data_root"],
             mode=mode,
             use_memory=config["use_memory"],
-            class_per_split_file=config["class_per_split"]
+            class_per_split_file=config["class_per_split"],
+            stats = (MEAN[0],STD[0])
         )
 
     if config["dataloader_num"] == 1 or mode in ["val", "test"]:
@@ -99,6 +100,9 @@ def get_dataloader(config, mode, model_type, distribute, modality='image'):
             pin_memory=False,
             collate_fn=collate_function,
         )
+        # print(few_shot)
+        # input()
+        
 
         return (dataloader,)
     else:
