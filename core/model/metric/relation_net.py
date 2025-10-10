@@ -22,7 +22,7 @@ Adapted from https://github.com/floodsung/LearningToCompare_FSL.
 import torch
 from torch import nn
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .metric_model import MetricModel
 
 
@@ -58,6 +58,9 @@ class RelationNet(MetricModel):
     def __init__(self, feat_dim=64, feat_height=3, feat_width=3, **kwargs):
         super(RelationNet, self).__init__(**kwargs)
         self.feat_dim = feat_dim
+        # print("feat_dim", feat_dim)
+        # print("feat_height", feat_height)
+        # print("feat_width", feat_width)
         self.feat_height = feat_height
         self.feat_width = feat_width
         self.relation_layer = RelationLayer(
@@ -71,18 +74,32 @@ class RelationNet(MetricModel):
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
 
         feat = self.emb_func(image)
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=2
+            feat, mode=2, repeats=repeats, support_size=support_size
         )
+        
+        output = []
+        for i in range(len(query_feat)):
+           
+            relation_pair = self._calc_pairs(query_feat[i].unsqueeze(0), support_feat[i])
+            output.append(self.relation_layer(relation_pair).reshape(-1, self.way_num))
+            
 
-        relation_pair = self._calc_pairs(query_feat, support_feat)
-        output = self.relation_layer(relation_pair).reshape(-1, self.way_num)
-
-        acc = accuracy(output, query_target.reshape(-1))
+        output = torch.cat(output, dim=0)
+        # acc = accuracy(output, query_target.reshape(-1))
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
         return output, acc
 
     def set_forward_loss(self, batch):
@@ -91,7 +108,12 @@ class RelationNet(MetricModel):
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
 
         feat = self.emb_func(image)
@@ -100,6 +122,8 @@ class RelationNet(MetricModel):
         )
 
         relation_pair = self._calc_pairs(query_feat, support_feat)
+        # print(relation_pair.shape)
+        # input()
         output = self.relation_layer(relation_pair).reshape(-1, self.way_num)
 
         loss = self.loss_func(output, query_target.reshape(-1))
@@ -123,11 +147,15 @@ class RelationNet(MetricModel):
         support_feat = (
             torch.sum(support_feat, dim=(2,))
             .unsqueeze(1)
-            .repeat(1, self.way_num * self.query_num, 1, 1, 1, 1)
+            .repeat(1, query_feat.shape[1], 1, 1, 1, 1)
         )
 
         # t, wq, w, 2c, h, w -> twqw, 2c, h, w
-        relation_pair = torch.cat((query_feat, support_feat), dim=3).reshape(
-            -1, c * 2, h, w
-        )
+        try:
+            relation_pair = torch.cat((query_feat, support_feat), dim=3).reshape(
+                -1, c * 2, h, w
+            )
+        except Exception as e:
+            print(query_feat.shape)
+            print(support_feat.shape)
         return relation_pair
