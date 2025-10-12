@@ -18,10 +18,11 @@ Adapter from https://github.com/kaipengm2/DiffKendall
 from itertools import combinations
 import torch
 from torch import nn
-from core.utils import accuracy
 from .metric_model import MetricModel
 from torch.nn import functional as F
 import random
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
+
 
 
 
@@ -127,13 +128,13 @@ class ProtoLayer(nn.Module):
         query_num,
         mode
         ):
-        t, wq, c = query_feat.size()
-        _, ws, _ = support_feat.size()
+        t1, wq, c = query_feat.size()
+        t2, ws, _ = support_feat.size()
 
         # t, wq, c
-        query_feat = query_feat.reshape(t, way_num * query_num, c)
+        # query_feat = query_feat.reshape(t, way_num * query_num, c)
         # t, w, c
-        support_feat = support_feat.reshape(t, way_num, shot_num, c)
+        support_feat = support_feat.reshape(t2, way_num, shot_num, c)
         proto_feat = torch.mean(support_feat, dim=2)
         if mode == "kendall":
             return kendall_ranking_correlation_for_batches(proto_feat, query_feat)
@@ -154,20 +155,35 @@ class MetaBaselineKendall(MetricModel):
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, global_target, repeats, support_size = batch
         image = image.to(self.device)
-        episode_size = image.size(0) // (
-            self.way_num * (self.shot_num + self.query_num)
-        )
+        
+        # episode_size = image.size(0) // (
+        #     self.way_num * (self.shot_num + self.query_num)
+        # )
         feat = self.emb_func(image)
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
-            feat, mode=1
+            feat, mode=1, repeats=repeats, support_size=support_size
         )
-        k_score = self.proto_layer(
-            query_feat, support_feat, self.way_num, self.shot_num, self.query_num,"kendall"
-        )
-        k_score = k_score.reshape(episode_size * self.way_num * self.query_num, self.way_num)
-        acc = accuracy(k_score, query_target.reshape(-1))
+        output = []
+
+        for i in range(len(query_feat)):
+            k_score = self.proto_layer(
+                query_feat[i].unsqueeze(0), support_feat[i].unsqueeze(0), self.way_num, self.shot_num, self.query_num,"kendall"
+            )
+            k_score = k_score.reshape(-1, self.way_num)
+            output.append(k_score)
+        
+        output = torch.cat(output, dim=0)
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
 
         return k_score, acc
 
@@ -177,7 +193,12 @@ class MetaBaselineKendall(MetricModel):
         :param batch:
         :return:
         """
-        images, global_targets = batch
+        if len(batch) == 2:
+            images, global_target = batch
+            repeats = None
+            support_size = 0
+        else:
+            images, global_target, repeats, support_size = batch
         images = images.to(self.device)
         episode_size = images.size(0) // (
             self.way_num * (self.shot_num + self.query_num)
