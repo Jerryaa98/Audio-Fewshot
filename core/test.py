@@ -55,16 +55,43 @@ class Test(object):
         total_h = np.zeros(self.config["test_epoch"])
         total_accuracy_vector = []
 
+
         for epoch_idx in range(self.config["test_epoch"]):
             print("============ Testing on the test set ============")
             _, accuracies = self._validate(epoch_idx)
-            test_accuracy, h = mean_confidence_interval(accuracies)
+            # accuracies is a list of scalars or tensors; convert to numpy array
+            if len(accuracies) == 0:
+                arr = np.array([])
+            else:
+                first = accuracies[0]
+                if isinstance(first, torch.Tensor):
+                    try:
+                        arr = torch.stack([a.detach().cpu().float().squeeze() for a in accuracies]).numpy()
+                    except Exception:
+                        # fallback: convert elementwise
+                        arr = np.array([float(a.item()) if isinstance(a, torch.Tensor) else float(a) for a in accuracies])
+                else:
+                    arr = np.array(accuracies, dtype=float)
+            test_accuracy, h = mean_confidence_interval(arr)
             print("Test Accuracy: {:.3f}\t h: {:.3f}".format(test_accuracy, h))
             total_accuracy += test_accuracy
             total_accuracy_vector.extend(accuracies)
             total_h[epoch_idx] = h
 
-        aver_accuracy, h = mean_confidence_interval(total_accuracy_vector)
+        # total_accuracy_vector may contain tensors or floats; convert to numeric array
+        if len(total_accuracy_vector) == 0:
+            avg_arr = np.array([])
+        else:
+            first = total_accuracy_vector[0]
+            if isinstance(first, torch.Tensor):
+                try:
+                    avg_arr = torch.stack([a.detach().cpu().float().squeeze() for a in total_accuracy_vector]).numpy()
+                except Exception:
+                    avg_arr = np.array([float(a.item()) if isinstance(a, torch.Tensor) else float(a) for a in total_accuracy_vector])
+            else:
+                avg_arr = np.array(total_accuracy_vector, dtype=float)
+
+        aver_accuracy, h = mean_confidence_interval(avg_arr)
         print("Aver Accuracy: {:.3f}\t Aver h: {:.3f}".format(aver_accuracy, h))
         print("............Testing is end............")
 
