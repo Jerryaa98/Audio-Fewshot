@@ -24,8 +24,8 @@ class ProtoLayer(nn.Module):
         super(ProtoLayer, self).__init__()
     
     def forward(self, query_feat, support_feat, way_num, shot_num, query_num):
-        t, wq, c = query_feat.size()
-        _, ws, _ = support_feat.size()
+        t = query_feat.size()[0]
+        _, ws, c = support_feat.size()
 
         # t, wq, c
         # query_feat = query_feat.reshape(t, way_num * query_num, c)
@@ -83,10 +83,15 @@ class DeepBDC(MetricModel):
 
         # support_feat -- [t, ws, c], query_feat -- [t, wq, c], 
         # support_target -- [t, ws],        query_feat -- [t, wq]
-
-        output = self.proto_layer(
-            query_feat[0].unsqueeze(0), support_feat, self.way_num, self.shot_num, self.query_num
-        ).reshape(-1, self.way_num)
+        output = []
+        for i in range(len(query_feat)):
+            # print(query_feat[i].shape, support_feat[i].shape)
+            # input()
+            output.append(self.proto_layer(
+                query_feat[i].unsqueeze(0).view(1, query_feat[i].size(0), -1), support_feat[i].unsqueeze(0), self.way_num, self.shot_num, self.query_num
+            ).reshape(-1, self.way_num))
+        output = torch.cat(output, dim=0)
+        
         # output expected be [t, wq, w] ---> [t*w*q, w]
 
         soft_logits = output.softmax(dim=1)
