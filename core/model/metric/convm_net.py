@@ -26,7 +26,7 @@ Adapted from https://github.com/WenbinLee/CovaMNet.
 import torch
 from torch import nn
 
-from core.utils import accuracy
+from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from .metric_model import MetricModel
 
 
@@ -91,6 +91,10 @@ class ConvMLayer(nn.Module):
         t, wq, c, h, w = query_feat.size()
         support_cov_mat = self._calc_support_cov(support_feat)
         cov_sim = self._calc_similarity(query_feat, support_cov_mat)
+        print(support_feat.shape)
+        print(query_feat.shape)
+        print(cov_sim.shape)
+        input()
         score = self.conv1dLayer(cov_sim).view(t, wq, self.way_num)
 
         return score
@@ -110,7 +114,12 @@ class ConvMNet(MetricModel):
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
         episode_size = image.size(0) // (
             self.way_num * (self.shot_num + self.query_num)
@@ -121,12 +130,24 @@ class ConvMNet(MetricModel):
             query_feat,
             support_target,
             query_target,
-        ) = self.split_by_episode(feat, mode=2)
+        ) = self.split_by_episode(feat, mode=2, repeats=repeats, support_size=support_size)
 
-        output = self.convm_layer(query_feat, support_feat).reshape(
-            episode_size * self.way_num * self.query_num, self.way_num
-        )
-        acc = accuracy(output, query_target.reshape(-1))
+        output = []
+        for i in range(len(query_feat)):
+            output.append(
+                self.convm_layer(query_feat[i], support_feat[i]).reshape(
+                    -1, self.way_num
+                )
+            )
+        # output = self.convm_layer(query_feat, support_feat).reshape(
+        #     episode_size * self.way_num * self.query_num, self.way_num
+        # )
+        output = torch.cat(output, dim=0)
+        soft_logits = output.softmax(dim=1)
+        pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
+        # acc = accuracy(output, query_target.reshape(-1))
 
         return output, acc
 
@@ -136,7 +157,12 @@ class ConvMNet(MetricModel):
         :param batch:
         :return:
         """
-        image, global_target = batch
+        if len(batch) == 2:
+            image, target = batch
+            repeats = None
+            support_size = 0
+        else:
+            image, target, repeats, support_size = batch
         image = image.to(self.device)
         episode_size = image.size(0) // (
             self.way_num * (self.shot_num + self.query_num)
