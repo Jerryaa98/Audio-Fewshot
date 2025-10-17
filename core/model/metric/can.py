@@ -31,6 +31,35 @@ from core.utils import accuracy, majority_vote, vote_catagorical_acc
 from core.model.metric.metric_model import MetricModel
 
 
+
+def transform_to_acceptable_format(features, way_num, shot_num, query_num, repeats, support_size):
+    episode_size = (repeats.size(0) + support_size) // (way_num * (shot_num + query_num))
+    temp = (way_num * (shot_num + query_num))
+    size_per_n_way_per_episode = hierarchical_cumsum_with_carry(repeats.cpu().numpy(), episode_size, way_num) 
+
+    support_features = []
+    query_features = []
+    cnt = 0
+    for i in range(episode_size):
+        query_features_temp = []
+        for j in range(len(size_per_n_way_per_episode[i])):
+            if j == 0:
+                if i == 0:
+                    support_features.append(features[:self.shot_num])
+                    query_features_temp.append(features[cnt+self.shot_num:cnt+self.shot_num+size_per_n_way_per_episode[i][j]])
+                else:
+                    support_features.append(features[cnt+size_per_n_way_per_episode[i-1][-1]:cnt+size_per_n_way_per_episode[i-1][-1] + self.shot_num])
+                    query_features_temp.append(features[cnt+size_per_n_way_per_episode[i-1][-1] + self.shot_num:size_per_n_way_per_episode[i][j] + cnt + self.shot_num])
+            else:
+                support_features.append(features[cnt+size_per_n_way_per_episode[i][j-1]:cnt+size_per_n_way_per_episode[i][j-1] + self.shot_num])
+                query_features_temp.append(features[cnt+size_per_n_way_per_episode[i][j-1] + self.shot_num:cnt+size_per_n_way_per_episode[i][j] + self.shot_num])
+            cnt += self.shot_num
+        query_features.append(torch.vstack(query_features_temp))
+
+    support_features = torch.stack(support_features).view(episode_size, way_num, shot_num, -1)     
+        
+
+
 class CrossEntropyLoss(nn.Module):
     def __init__(self):
         super(CrossEntropyLoss, self).__init__()
@@ -396,7 +425,7 @@ class CAN(MetricModel):
             support_targets,
             query_targets,
         ) = self.split_by_episode(
-            emb, mode=2, repeats=repeats, support_size=support_size
+            emb, mode=2
         )  # [4,5,512,6,6] [4,
         # 75, 512,6,6] [4, 5] [300]
         support_targets = support_targets.reshape(
