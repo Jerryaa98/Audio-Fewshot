@@ -140,3 +140,4 @@ data/
 sbatch_scripts/
 *.bak
 logs/
+plots/
