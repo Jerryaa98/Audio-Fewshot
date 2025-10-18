@@ -141,3 +141,4 @@ sbatch_scripts/
 *.bak
 logs/
 plots/
+scripts/
