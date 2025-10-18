@@ -139,3 +139,4 @@ results/
 data/
 sbatch_scripts/
 *.bak
+logs/
