@@ -137,3 +137,4 @@ dmypy.json
 results/
 
 data/
+sbatch_scripts/

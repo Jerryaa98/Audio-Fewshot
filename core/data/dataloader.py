@@ -17,7 +17,7 @@ from queue import Queue
 from threading import Thread
 
 
-def get_dataloader(config, mode, model_type, distribute, modality='image'):
+def get_dataloader(config, mode, model_type, distribute, modality='audio'):
     """Get the dataloader corresponding to the model type and training phase.
 
     According to the config dict, the training phase and model category, select the appropriate transforms, set the corresponding sampler and collate_fn, and return the corresponding dataloader.
@@ -40,6 +40,8 @@ def get_dataloader(config, mode, model_type, distribute, modality='image'):
     MEAN,STD=get_mean_std(config, mode, modality)
     
     trfms_list = get_augment_method(config, mode, modality)
+    # print(modality)
+    # input()
     if modality == 'image':
         trfms_list.append(transforms.ToTensor())
     else:
