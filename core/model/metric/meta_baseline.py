@@ -279,8 +279,8 @@ class MetaBaseline(MetricModel):
         
         feat = self.emb_func(image)
         
-        self.visualize_features(feat, shot=1, way=5, query=10)
-        input()
+        # self.visualize_features(feat, shot=10, way=5, query=10)
+        # input()
         
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
             feat, mode=1, repeats=repeats, support_size=support_size
