@@ -15,3 +15,4 @@ from .frn import FRN
 from .meta_baseline import MetaBaseline
 from .mcl import MCL
 from .cpea_net import CPEANet
+from .meta_baseline_kendall import MetaBaselineKendall
