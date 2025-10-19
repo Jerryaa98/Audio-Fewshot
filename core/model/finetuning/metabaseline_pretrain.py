@@ -53,6 +53,8 @@ class MetabaselinePretrain(FinetuningModel):
         self.classifier = nn.Linear(self.feat_dim, self.num_class)
         self.proto_layer = ProtoLayer()
         self.loss_func = nn.CrossEntropyLoss()
+        
+
 
     def set_forward(self, batch):
         """
@@ -69,6 +71,8 @@ class MetabaselinePretrain(FinetuningModel):
         image = image.to(self.device)
         with torch.no_grad():
             feat = self.emb_func(image)
+             # use tsne to visualize the feature distribution
+
 
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
             feat, mode=1, repeats=repeats, support_size=support_size
