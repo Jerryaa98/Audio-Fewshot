@@ -228,6 +228,9 @@ class ResNet(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
+        # added manually
+        # TODO: make this come from the yaml and fix the gpu memory issue
+        # self.dim_reduce = nn.Linear(12800, 64)
 
     def _make_layer(
         self,
@@ -278,6 +281,7 @@ class ResNet(nn.Module):
             x = self.avgpool(x)
         if self.is_flatten:
             x = x.view(x.size(0), -1)
+        # x = self.dim_reduce(x)
         return x
 
 
