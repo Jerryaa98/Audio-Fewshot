@@ -278,8 +278,8 @@ class DeepBDC(MetricModel):
         
         feat = self.emb_func(image)     # [bsize, c] -- [bsize = t * way_num * (n_s + n_q), c=r*(r+1)/2
         # use tsne to visualize the feature distribution
-        self.visualize_features(feat, shot=10, way=5, query=10)
-        input()
+        # self.visualize_features(feat, shot=10, way=5, query=10)
+        # input()
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
             feat, mode=1, repeats=repeats, support_size=support_size
         )
