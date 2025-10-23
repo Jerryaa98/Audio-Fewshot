@@ -135,12 +135,25 @@ class MAML(MetaModel):
         ):
             output = self.forward_output(support_set)
             loss = self.loss_func(output, support_target)
-            grad = torch.autograd.grad(loss, fast_parameters, create_graph=True)
+            # allow_unused=True so autograd won't error if a parameter wasn't used
+            grad = torch.autograd.grad(loss, fast_parameters, create_graph=True, allow_unused=True)
             fast_parameters = []
 
             for k, weight in enumerate(self.parameters()):
+                g = grad[k]
+                # If a parameter was unused, autograd returns None. Replace with zeros
+                # on the correct device/dtype and ensure it participates in the graph when
+                # create_graph=True by enabling requires_grad.
+                if g is None:
+                    g = torch.zeros_like(weight)
+                    # ensure gradient tensor can be part of higher-order graph
+                    try:
+                        g.requires_grad_(True)
+                    except Exception:
+                        # some torch versions may not allow changing requires_grad; ignore
+                        pass
                 if weight.fast is None:
-                    weight.fast = weight - lr * grad[k]
+                    weight.fast = weight - lr * g
                 else:
-                    weight.fast = weight.fast - lr * grad[k]
+                    weight.fast = weight.fast - lr * g
                 fast_parameters.append(weight.fast)
