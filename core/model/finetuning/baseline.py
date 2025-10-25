@@ -51,6 +51,11 @@ class Baseline(FinetuningModel):
         support_feat, query_feat, support_target, query_target = self.split_by_episode(
             feat, mode=1, repeats=repeats, support_size=support_size
         )
+        # support_feat = support_feat.to(self.device)
+        # query_feat = query_feat.to(self.device)
+        # support_target = support_target.to(self.device)
+        # query_target = query_target.to(self.device)
+        
         episode_size = support_feat.size(0)
 
         output_list = []
@@ -63,7 +68,7 @@ class Baseline(FinetuningModel):
         output = torch.cat(output_list, dim=0)
         soft_logits = output.softmax(dim=1)
         pre_query_pred = majority_vote(soft_logits, repeats).to('cuda', dtype=torch.long)
-        post_query_y = torch.repeat_interleave(query_target.reshape(-1), repeats).to('cuda', dtype=torch.long)
+        post_query_y = torch.repeat_interleave(query_target.reshape(-1).to('cpu'), repeats.to('cpu')).to('cuda', dtype=torch.long)
         acc = vote_catagorical_acc(query_target.reshape(-1).to('cuda'), pre_query_pred.to('cuda'))
         # acc = accuracy(output, query_target.reshape(-1))
 
