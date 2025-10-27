@@ -1,6 +1,7 @@
 # [LibFewShot](https://arxiv.org/abs/2109.04898)
 Make few-shot learning easy.
 
+<p align="center"><a href="https://libfewshot-en.readthedocs.io/en/latest/"><img src="./logo.png" alt="LibFewShot logo" width="40%"></a></p>
 
 [LibFewShot: A Comprehensive Library for Few-shot Learning](https://www.computer.org/csdl/journal/tp/5555/01/10239698/1Qck3o85t60).
 
@@ -59,4 +60,5 @@ LibFewShot is an open source project designed to help few-shot learning research
 
 ## Citation
 If you use this code for your research, please cite our paper.
+
 
