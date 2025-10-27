@@ -145,6 +145,8 @@ class Test(object):
                 # calculate the output
                 calc_begin = time()
                 output, acc = self.model([elem for each_batch in batch for elem in each_batch])
+                # print(output.shape)
+                # input()
                 accuracies.append(acc)
                 meter.update("calc_time", time() - calc_begin)
 
