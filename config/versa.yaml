@@ -7,12 +7,12 @@ includes:
 
 deterministic: False
 
-way_num: 5
-shot_num: 5
-query_num: 5
-test_way: 5 # use ~ -> test_* = *_num
-test_shot: 5
-test_query: 5
+# way_num: 5
+# shot_num: 5
+# query_num: 5
+# test_way: 5 # use ~ -> test_* = *_num
+# test_shot: 5
+# test_query: 5
 
 episode_size: 1
 
@@ -35,45 +35,58 @@ backbone:
 classifier:
   name: VERSA
   kwargs:
-    feat_dim: 4608
+    feat_dim: 1600
     d_theta: 256
     sample_num: 10
     drop_rate: 0.5
 
 
-# backbone:
-#   name: resnet12
-#   kwargs: ~
+augment: true
+augment_times: 1
+augment_times_query: 1
 
-# classifier:
-#   name: VERSA
-#   kwargs:
-#     feat_dim: 640
-#     hid_dim: 640
-#     sample_num: 10
-
-
-# backbone:
-#   name: resnet18
-#   kwargs: ~
-
-# classifier:
-#   name: VERSA
-#   kwargs:
-#     feat_dim: 512
-#     hid_dim: 512
-#     sample_num: 10
-
-
-# backbone:
-#   name: WRN
-#   kwargs:
-#     depth: 28
-#     widen_factor: 10
-
-# classifier:
-#   name: VERSA
-#   kwargs:
-#     feat_dim: 640
-#     hid_dim: 640
-#     sample_num: 10
+batch_size: 1
+data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
+deterministic: true
+device_ids: 0
+discriminative: false
+epoch: 25
+log_interval: 100
+log_level: info
+log_name: null
+log_paramerter: false
+lr_scheduler:
+  kwargs:
+    gamma: 1.0
+    step_size: 20
+  name: StepLR
+n_gpu: 1
+optimizer:
+  kwargs:
+    lr: 0.00025
+    weight_decay: 0.0005
+  name: Adam
+  other: null
+parallel_part:
+- emb_func
+port: 41387
+pretrain_path: null
+query_num: 10
+rank: 0
+result_root: ./results
+resume: false
+save_interval: 10
+save_part:
+- emb_func
+seed: 0
+shot_num: 1
+tag: null
+tb_scale: 3.3333333333333335
+test_episode: 600
+test_epoch: 5
+test_query: 10
+test_shot: 1
+test_way: 5
+train_episode: 2000
+use_memory: false
+way_num: 5

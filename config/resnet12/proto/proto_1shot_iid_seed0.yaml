@@ -1,0 +1,176 @@
+# includes:
+#   - headers/data.yaml
+#   - headers/device.yaml
+#   - headers/misc.yaml
+#   - headers/model.yaml
+#   - headers/optimizer.yaml
+
+# way_num: 5
+# shot_num: 1
+# query_num: 10
+# episode_size: 2
+# train_episode: 2000
+# test_episode: 600
+
+# device_ids: 0
+# n_gpu: 1
+# epoch: 30
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: False
+
+
+
+# optimizer:
+#   name: Adam
+#   kwargs:
+#     lr: 1e-3
+#   other: ~
+
+# backbone:
+#   name: Conv64F
+#   kwargs:
+#     is_flatten: True
+#     is_feature: False
+#     leaky_relu: False
+#     negative_slope: 0.2
+#     last_pool: True
+#     num_channels: 1
+
+# classifier:
+#   name: MAML
+#   kwargs:
+#     inner_param:
+#       lr: 1e-2
+#       train_iter: 5
+#       test_iter: 10
+#     feat_dim: 4608
+
+
+# backbone:
+#   name: resnet12
+#   kwargs: ~
+
+# classifier:
+#   name: MAML
+#   kwargs:
+#     inner_param:
+#       lr: 1e-2
+#       train_iter: 5
+#       test_iter: 10
+#     feat_dim: 640
+
+
+# backbone:
+#   name: resnet18
+#   kwargs: ~
+
+# classifier:
+#   name: MAML
+#   kwargs:
+#     inner_param:
+#       lr: 1e-2
+#       train_iter: 5
+#       test_iter: 10
+#     feat_dim: 512
+
+
+# backbone:
+#   name: WRN
+#   kwargs:
+#     depth: 28
+#     widen_factor: 10
+
+# classifier:
+#   name: MAML
+#   kwargs:
+#     inner_param:
+#       lr: 1e-2
+#       train_iter: 5
+#       test_iter: 10
+#     feat_dim: 640
+
+
+# augment: true
+# augment_times: 1
+# augment_times_query: 1
+
+warmup: 0
+backbone:
+  name: resnet12
+  kwargs:
+    keep_prob: 0.0
+    avg_pool: True
+    is_flatten: True
+    maxpool_last2: True
+    num_channels: 1
+
+batch_size: 128
+classifier:
+  kwargs: null
+  name: ProtoNet
+deterministic: true
+device_ids: 0
+episode_size: 1
+epoch: 30
+
+image_size: 84
+includes:
+- headers/data.yaml
+- headers/device.yaml
+- headers/misc.yaml
+- headers/model.yaml
+- headers/optimizer.yaml
+- classifiers/Proto.yaml
+- backbones/resnet12.yaml
+log_interval: 100
+log_level: info
+log_name: null
+log_paramerter: false
+lr_scheduler:
+  kwargs:
+    T_max: 100
+    eta_min: 0
+  name: CosineAnnealingLR
+# lr_scheduler:
+#   kwargs:
+#     patience: 100000
+#     factor: 0.5
+#     min_lr: 0.0001
+#     mode: min
+#     # T_max: 100
+#     # eta_min: 0
+#   name: ReduceLROnPlateau
+n_gpu: 1
+optimizer:
+  kwargs:
+    lr: 0.005
+    weight_decay: 0
+  name: Adam
+  other:
+    emb_func: 0.01
+parallel_part:
+- emb_func
+pretrain_path: null
+query_num: 5
+rank: 0
+result_root: ./results
+resume: false
+save_interval: 10
+save_part:
+- emb_func
+seed: 0
+shot_num: 1
+tag: null
+tb_scale: 8.333333333333334
+test_episode: 600
+test_epoch: 5
+test_query: 5
+test_shot: 1
+test_way: 5
+train_episode: 1000
+use_memory: false
+way_num: 5
+data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
+

@@ -1,0 +1,9 @@
+backbone:
+  name: WRN
+  kwargs:
+    depth: 28
+    widen_factor: 10
+    dropRate: 0.0
+    avg_pool: True
+    is_flatten: True
+    num_channels: 1

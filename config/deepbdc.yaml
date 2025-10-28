@@ -6,23 +6,23 @@ includes:
   - headers/optimizer.yaml
 
 n_gpu: 1
-device_ids: 1
+device_ids: 0
 episode_size: 1
-epoch: 170
-image_size: 84
+epoch: 30
+# image_size: 84
 batch_size: 64
 
 test_episode: 600   # test/val n_episodes, number of episodes in meta val
 test_epoch: 1
-test_query: 15
+test_query: 10
 test_shot: 1
 test_way: 5
-train_episode: 100
-query_num: 15
+train_episode: 1000
+query_num: 10
 shot_num: 1
 way_num: 5
 
-augment: true
+augment: false
 augment_times: 1
 augment_times_query: 1
 augment_method: DeepBdcAugment
@@ -30,23 +30,35 @@ augment_method: DeepBdcAugment
 modality: audio
 mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
 class_per_split: ./Auxiliary/KOS_paper_splits.npy
-ood: True
+ood: False
 
 backbone:
   name: resnet12Bdc
   kwargs:
-    reduce_dim: 640
+    reduce_dim: 64
     num_channels: 1
+
+# backbone:
+#   kwargs:
+#     is_feature: false
+#     is_flatten: false
+#     last_pool: false
+#     leaky_relu: false
+#     maxpool_last2: false
+#     negative_slope: 0.2
+#     num_channels: 1
+#   name: Conv64F
 
 classifier:
   name: DeepBDC
   kwargs: ~
 
-pretrain_path: ./results/DeepBDC_Pretrain-KOS_spec-resnet12Bdc-5-1-Sep-04-2025-22-58-37/checkpoints/emb_func_best.pth
+# pretrain_path: ./results/DeepBDC_Pretrain-KOS_spec-resnet12Bdc-5-1-Sep-04-2025-22-58-37/checkpoints/emb_func_best.pth
+pretrain_path: null
 
 optimizer:
   kwargs:
-    lr: 0.0001
+    lr: 0.005
     momentum: 0.9
     nesterov: true
     weight_decay: 0.0005

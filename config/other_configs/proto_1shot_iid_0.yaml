@@ -1,0 +1,170 @@
+includes:
+  - headers/data_0.yaml
+  # - headers/device.yaml
+  # - headers/misc.yaml
+  # - headers/model.yaml
+  # - headers/optimizer.yaml
+  # - classifiers/Proto.yaml
+  # - backbones/resnet12.yaml
+
+modality: audio
+mean_std_file: ./Auxiliary/KOS_0_alpha_Mean_Std.npy
+# mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+
+
+# device_ids: 0
+# n_gpu: 1
+# epoch: 100
+# batch_size: 128
+# way_num: 5
+# shot_num: 1
+# query_num: 10
+# episode_size: 1
+# train_episode: 2000
+# test_episode: 600
+ood: False
+
+# lr_scheduler:
+#   kwargs:
+#     T_max: 100
+#     eta_min: 0
+#   name: CosineAnnealingLR
+
+# optimizer:
+#   kwargs:
+#     lr: 0.001
+#     weight_decay: 0.0005
+#   name: Adam
+#   other: null
+
+# backbone:
+#   name: Conv64F
+#   kwargs:
+#     is_flatten: True
+#     is_feature: False
+#     leaky_relu: False
+#     negative_slope: 0.2
+#     last_pool: True
+#     num_channels: 1
+
+# parallel_part:
+# - emb_func
+# port: 48828
+# pretrain_path: null
+# query_num: 15
+# rank: 0
+# result_root: ./results
+# resume: false
+# save_interval: 10
+# save_part:
+# - emb_func
+# seed: 0
+# shot_num: 1
+# tag: null
+# tb_scale: 3.3333333333333335
+# test_episode: 600
+# test_epoch: 5
+# test_query: 15
+# test_shot: 1
+# test_way: 5
+# train_episode: 2000
+# use_memory: false
+# way_num: 5
+# workers: 16
+
+  # name: resnet12
+  # kwargs:
+  #   avg_pool: true
+  #   is_flatten: true
+  #   keep_prob: 0.0
+  #   maxpool_last2: true
+  #   num_channels: 1
+
+# backbone:
+#   name: resnet12
+#   kwargs:
+#     keep_prob: 0.0
+
+# backbone:
+#   name: resnet18
+#   kwargs:
+
+# backbone:
+#   name: WRN
+#   kwargs:
+#     depth: 10
+#     widen_factor: 10
+#     dropRate: 0.0
+#     avg_pool: True
+#     is_flatten: True
+########################################
+
+backbone:
+  kwargs:
+    is_feature: false
+    is_flatten: true
+    last_pool: true
+    leaky_relu: false
+    maxpool_last2: true
+    negative_slope: 0.2
+    num_channels: 1
+  name: Conv64F
+batch_size: 128
+classifier:
+  kwargs: null
+  name: ProtoNet
+# data_root: null
+deterministic: true
+device_ids: 0
+episode_size: 2
+epoch: 100
+image_size: 84
+includes:
+# - headers/data.yaml
+  - headers/device.yaml
+  - headers/misc.yaml
+  - headers/model.yaml
+  - headers/optimizer.yaml
+  - classifiers/Proto.yaml
+  - backbones/Conv64F.yaml
+log_interval: 100
+log_level: info
+log_name: null
+log_paramerter: false
+lr_scheduler:
+  kwargs:
+    T_max: 100
+    eta_min: 0
+  name: CosineAnnealingLR
+n_gpu: 1
+optimizer:
+  kwargs:
+    lr: 0.01
+    weight_decay: 0.0005
+  name: SGD
+  other:
+    emb_func: 0.01
+parallel_part:
+- emb_func
+pretrain_path: null
+query_num: 10
+rank: 0
+result_root: ./results
+resume: false
+save_interval: 10
+save_part:
+- emb_func
+seed: 12
+shot_num: 1
+tag: null
+tb_scale: 8.333333333333334
+test_episode: 600
+test_epoch: 5
+test_query: 10
+test_shot: 1
+test_way: 5
+train_episode: 5000
+use_memory: false
+way_num: 5
+data_root: /root/SC/Results/KOS_clean_set/KOS_clean_set_spec

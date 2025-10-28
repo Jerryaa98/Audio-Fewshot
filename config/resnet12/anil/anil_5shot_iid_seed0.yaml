@@ -1,0 +1,100 @@
+includes:
+  - headers/data.yaml
+  - headers/device.yaml
+  - headers/misc.yaml
+  - headers/model.yaml
+  - headers/optimizer.yaml
+
+device_ids: 1
+n_gpu: 1
+way_num: 5
+shot_num: 5
+query_num: 5
+episode_size: 4
+train_episode: 1000
+test_episode: 600
+epoch: 30
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: False
+
+lr_scheduler:
+  kwargs:
+    gamma: 0.5
+    step_size: 20
+  name: StepLR
+
+
+optimizer:
+  name: Adam
+  kwargs:
+    lr: 1e-3
+  other: ~
+
+backbone:
+  name: resnet12
+  kwargs:
+    keep_prob: 0.0
+    avg_pool: True
+    is_flatten: True
+    maxpool_last2: True
+    num_channels: 1
+
+
+classifier:
+  name: ANIL
+  kwargs:
+    inner_param:
+      lr: 1e-2
+      train_iter: 5
+      test_iter: 10
+    feat_dim: 12800
+
+seed: 0
+# backbone:
+#   name: resnet12
+#   kwargs:
+#     keep_prob: 0.0
+
+# classifier:
+#   name: ANIL
+#   kwargs:
+#     inner_param:
+#       lr: 1e-3
+#       train_iter: 5
+#       test_iter: 10
+#     feat_dim: 640
+
+
+# backbone:
+#   name: resnet18
+#   kwargs:
+
+# classifier:
+#   name: ANIL
+#   kwargs:
+#     inner_param:
+#       lr: 1e-3
+#       train_iter: 5
+#       test_iter: 10
+#     feat_dim: 512
+
+
+# backbone:
+#   name: WRN
+#   kwargs:
+#     depth: 10
+#     widen_factor: 10
+#     dropRate: 0.0
+#     avg_pool: True
+#     is_flatten: True
+
+# classifier:
+#   name: ANIL
+#   kwargs:
+#     inner_param:
+#       lr: 1e-3
+      # train_iter: 5
+      # test_iter: 10
+#     feat_dim: 640

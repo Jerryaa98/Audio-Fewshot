@@ -1,0 +1,168 @@
+# includes:
+#   - headers/data_0.5.yaml
+#   - headers/device.yaml
+#   - headers/misc.yaml
+#   - headers/model.yaml
+#   - headers/optimizer.yaml
+
+# device_ids: 1
+# n_gpu: 1
+# way_num: 5
+# shot_num: 5
+# query_num: 10
+# episode_size: 4
+# train_episode: 2000
+# test_episode: 600
+# epoch: 100
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
+
+
+
+
+# optimizer:
+#   name: Adam
+#   kwargs:
+#     lr: 1e-3
+#   other: ~
+
+# backbone:
+#   name: Conv64F
+#   kwargs:
+#     is_flatten: True
+#     is_feature: False
+#     leaky_relu: False
+#     negative_slope: 0.2
+#     last_pool: True
+#     num_channels: 1
+
+# classifier:
+#   name: ANIL
+#   kwargs:
+#     inner_param:
+#       lr: 1e-2
+#       train_iter: 5
+#       test_iter: 10
+#     feat_dim: 4608
+
+
+# # backbone:
+# #   name: resnet12
+# #   kwargs:
+# #     keep_prob: 0.0
+
+# # classifier:
+# #   name: ANIL
+# #   kwargs:
+# #     inner_param:
+# #       lr: 1e-3
+# #       train_iter: 5
+# #       test_iter: 10
+# #     feat_dim: 640
+
+
+# # backbone:
+# #   name: resnet18
+# #   kwargs:
+
+# # classifier:
+# #   name: ANIL
+# #   kwargs:
+# #     inner_param:
+# #       lr: 1e-3
+# #       train_iter: 5
+# #       test_iter: 10
+# #     feat_dim: 512
+
+
+# # backbone:
+# #   name: WRN
+# #   kwargs:
+# #     depth: 10
+# #     widen_factor: 10
+# #     dropRate: 0.0
+# #     avg_pool: True
+# #     is_flatten: True
+
+# # classifier:
+# #   name: ANIL
+# #   kwargs:
+# #     inner_param:
+# #       lr: 1e-3
+#       # train_iter: 5
+#       # test_iter: 10
+# #     feat_dim: 640
+
+
+backbone:
+  name: resnet12
+  kwargs:
+    keep_prob: 0.0
+    avg_pool: True
+    is_flatten: True
+    maxpool_last2: True
+    num_channels: 1
+
+batch_size: 128
+classifier:
+  kwargs:
+    feat_dim: 12800
+    inner_param:
+      lr: 0.01
+      test_iter: 10
+      train_iter: 5
+  name: ANIL
+# data_root: /data/wzy/miniImageNet--ravi
+deterministic: true
+device_ids: 7
+episode_size: 4
+epoch: 100
+image_size: 84
+includes:
+- headers/data.yaml
+- headers/device.yaml
+- headers/misc.yaml
+- headers/model.yaml
+- headers/optimizer.yaml
+log_interval: 100
+log_level: info
+log_name: null
+log_paramerter: false
+lr_scheduler:
+  kwargs:
+    gamma: 1.0
+    step_size: 20
+  name: StepLR
+n_gpu: 1
+optimizer:
+  kwargs:
+    lr: 0.001
+  name: Adam
+  other: null
+parallel_part:
+- emb_func
+port: 25619
+pretrain_path: null
+query_num: 5
+rank: 0
+result_root: ./results
+resume: false
+save_interval: 10
+save_part:
+- emb_func
+seed: 2147483647
+shot_num: 5
+tag: null
+tb_scale: 3.3333333333333335
+test_episode: 600
+test_epoch: 5
+test_query: 5
+test_shot: 5
+test_way: 5
+train_episode: 2000
+use_memory: false
+way_num: 5
+workers: 8
+data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec

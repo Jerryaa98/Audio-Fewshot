@@ -1,0 +1,78 @@
+includes:
+- headers/data.yaml
+- headers/device.yaml
+- headers/misc.yaml
+- headers/model.yaml
+- headers/optimizer.yaml
+- classifiers/CPEA.yaml
+- backbones/ViTClassAware.yaml
+augment: false
+# augment_times: 1
+# augment_times_query: 1
+backbone:
+  name: resnet12
+  kwargs:
+    keep_prob: 0.0
+    avg_pool: True
+    is_flatten: True
+    maxpool_last2: True
+    num_channels: 1
+
+batch_size: 128
+classifier:
+  kwargs: null
+  name: CPEANet
+data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
+dataloader_num: 1
+deterministic: true
+device_ids: 0
+episode_size: 1
+epoch: 50
+# image_size: 224
+log_interval: 100
+log_level: info
+log_name: null
+log_paramerter: false
+lr_scheduler:
+  kwargs:
+    gamma: 0.5
+    step_size: 5
+  name: StepLR
+n_gpu: 1
+optimizer:
+  kwargs:
+    lr: 1.0e-03
+    weight_decay: 0.001
+  name: Adam
+  other: null
+parallel_part:
+- emb_func
+port: 51612
+# pretrain_path: /mnt/hdd/FSL/LibFewShot/core/model/backbone/pretrain/ViTClassAware_miniimagenet.pth
+query_num: 5
+rank: 0
+result_root: ./results
+resume: false
+save_interval: 10
+save_part:
+- emb_func
+seed: 0
+shot_num: 1
+tag: null
+tb_scale: 1.0
+test_episode: 400
+test_epoch: 5
+test_query: 5
+test_shot: 1
+test_way: 5
+train_episode: 1000
+use_memory: false
+val_per_epoch: 1
+warmup: 0
+way_num: 5
+workers: 5
+
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: False

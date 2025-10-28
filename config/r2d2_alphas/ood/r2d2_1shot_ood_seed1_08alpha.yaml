@@ -1,0 +1,80 @@
+includes:
+  - headers/data.yaml
+  - headers/device.yaml
+  - headers/misc.yaml
+  - headers/model.yaml
+  - headers/optimizer.yaml
+  - classifiers/R2D2.yaml
+
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
+
+backbone:
+  name: Conv64F
+  kwargs:
+    is_flatten: True
+    is_feature: False
+    leaky_relu: True
+    negative_slope: 0.2
+    last_pool: True
+    num_channels: 1
+
+batch_size: 1
+classifier:
+  kwargs: null
+  name: R2D2
+data_root: /root/SC/Results/KOS_0.8_alpha/KOS_0.8_alpha_spec
+deterministic: true
+device_ids: 0
+episode_size: 1
+epoch: 30
+includes:
+- headers/device.yaml
+- headers/misc.yaml
+- headers/model.yaml
+- headers/optimizer.yaml
+- classifiers/R2D2.yaml
+log_interval: 100
+log_level: info
+log_name: null
+log_paramerter: false
+lr_scheduler:
+  kwargs:
+    T_max: 100
+    eta_min: 0
+  name: CosineAnnealingLR
+n_gpu: 1
+optimizer:
+  kwargs:
+    lr: 0.1
+    momentum: 0.9
+    nesterov: true
+    weight_decay: 0.0005
+  name: SGD
+  other: null
+parallel_part:
+- emb_func
+port: 43712
+pretrain_path: null
+query_num: 10
+rank: 0
+result_root: ./results
+resume: false
+save_interval: 10
+save_part:
+- emb_func
+seed: 0
+shot_num: 1
+tag: null
+tb_scale: 3.3333333333333335
+test_episode: 600
+test_epoch: 5
+test_query: 10
+test_shot: 1
+test_way: 5
+train_episode: 1000
+use_memory: false
+way_num: 5
+workers: 16

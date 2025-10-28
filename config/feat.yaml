@@ -1,21 +1,21 @@
 includes:
-  - headers/data_0.yaml
+  - headers/data.yaml
   - headers/device.yaml
   - headers/misc.yaml
   - headers/model.yaml
   - headers/optimizer.yaml
   - classifiers/FEAT.yaml
-  - backbones/WRN.yaml
+  # - backbones/WRN.yaml
 
 modality: audio
 mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
 class_per_split: ./Auxiliary/KOS_paper_splits.npy
-ood: False
+ood: True
 
 classifier:
   name: FEAT
   kwargs:
-    hdim: 4608
+    hdim: 1600
     temperature: 1.0
     temperature2: 1.0
     balance: 0.5
@@ -31,23 +31,53 @@ backbone:
     last_pool: True
     num_channels: 1
 
-# Conv64: feat_dim: 1600
+resume: True
+pretrain_path: null
 
-# backbone:
-#   name: resnet12
-#   kwargs:
-#     keep_prob: 0.0
-#     avg_pool: True
-#     is_flatten: True
+warmup: 0
+batch_size: 128
+deterministic: true
+device_ids: 0
+episode_size: 1
+epoch: 30
 
-# resnet12: feat_dim: 640
+log_interval: 100
+log_level: info
+log_name: null
+log_paramerter: false
+lr_scheduler:
+  kwargs:
+    gamma: 0.5
+    step_size: 5
+  name: StepLR
 
-# resnet18: feat_dim: 512
-
-#backbone:
-#  name: WRN
-#  kwargs:
-#    depth: 28
-#    widen_factor: 10
-
-# WRN: feat_dim: 640
+n_gpu: 1
+optimizer:
+  kwargs:
+    lr: 0.05
+    weight_decay: 0
+  name: Adam
+  other:
+    emb_func: 0.01
+parallel_part:
+- emb_func
+query_num: 10
+rank: 0
+result_root: ./results
+resume: false
+save_interval: 10
+save_part:
+- emb_func
+seed: 1
+shot_num: 1
+tag: null
+tb_scale: 8.333333333333334
+test_episode: 600
+test_epoch: 5
+test_query: 10
+test_shot: 1
+test_way: 5
+train_episode: 1000
+use_memory: false
+way_num: 5
+data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec

@@ -1,21 +1,21 @@
 includes:
-  - headers/data_0.yaml
+  - headers/data.yaml
   - headers/device.yaml
   - headers/misc.yaml
   - headers/model.yaml
   - headers/optimizer.yaml
   - classifiers/feat_pretrain.yaml
-  - backbones/WRN.yaml
+  - backbones/Conv64F.yaml
 
 modality: audio
-mean_std_file: ./Auxiliary/KOS_0_alpha_Mean_Std.npy
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
 class_per_split: ./Auxiliary/KOS_paper_splits.npy
 ood: False
 
 classifier:
   name: FEAT_Pretrain
   kwargs:
-    feat_dim: 4608
+    feat_dim: 1600
     train_num_class: 38
     val_num_class: 38
     mode: euclidean

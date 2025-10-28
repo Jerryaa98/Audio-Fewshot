@@ -1,0 +1,72 @@
+augment: false
+augment_times: 1
+augment_times_query: 1
+backbone:
+  name: Conv64F
+  kwargs:
+    is_flatten: True
+    is_feature: False
+    leaky_relu: False
+    negative_slope: 0.2
+    last_pool: True
+    num_channels: 1
+
+batch_size: 128
+classifier:
+  kwargs:
+
+  name: MetaBaseline
+data_root: /root/SC/Results/KOS_0.5_alpha/KOS_0.5_alpha_spec
+
+
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: False
+
+deterministic: true
+device_ids: 0
+n_gpu: 1
+episode_size: 1
+epoch: 30
+log_interval: 100
+log_level: info
+log_name: null
+log_paramerter: false
+lr_scheduler:
+  kwargs:
+    gamma: 1.0
+    step_size: 20
+  name: StepLR
+
+optimizer:
+  kwargs:
+    lr: 0.001
+    weight_decay: 0.0005
+    momentum: 0.9
+  name: SGD
+parallel_part:
+- emb_func
+- classifier
+port: 31691
+# pretrain_path: ./results/MetabaselinePretrain-KOS_spec-resnet12-5-5-Sep-05-2025-22-22-05/checkpoints/emb_func_best.pth
+query_num: 10
+rank: 0
+result_root: ./results
+resume: false
+save_interval: 10
+save_part:
+- emb_func
+seed: 1
+shot_num: 1
+tag: null
+tb_scale: 1.6666666666666667
+test_episode: 600
+test_epoch: 5
+test_query: 10
+test_shot: 1
+test_way: 5
+train_episode: 1000
+use_memory: false
+way_num: 5
+workers: 8

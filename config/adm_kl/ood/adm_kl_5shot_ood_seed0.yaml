@@ -1,0 +1,81 @@
+includes:
+  - headers/data.yaml
+  - headers/device.yaml
+  - headers/misc.yaml
+  - headers/model.yaml
+  - headers/optimizer.yaml
+  - classifiers/ADM_KL.yaml
+  - backbones/Conv64F.yaml
+
+classifier:
+  name: ADM_KL
+  kwargs:
+    n_k: 3
+    CMS: True
+
+
+modality: audio
+mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
+class_per_split: ./Auxiliary/KOS_paper_splits.npy
+ood: True
+
+augment: true
+augment_times: 1
+augment_times_query: 1
+# backbone:
+#   kwargs:
+#     is_feature: false
+#     is_flatten: false
+#     last_pool: true
+#     leaky_relu: false
+#     negative_slope: 0.2
+#     num_channels: 1
+#   name: Conv64F
+batch_size: 1
+data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
+dataloader_num: 1
+deterministic: true
+device_ids: 0
+episode_size: 1
+epoch: 30
+log_interval: 100
+log_level: info
+log_name: null
+log_paramerter: false
+lr_scheduler:
+  kwargs:
+    gamma: 1.0
+    step_size: 20
+  name: StepLR
+n_gpu: 1
+optimizer:
+  kwargs:
+    lr: 0.001
+  name: Adam
+  other: null
+parallel_part:
+- emb_func
+port: 44192
+pretrain_path: null
+query_num: 10
+rank: 0
+result_root: ./results
+resume: false
+save_interval: 10
+save_part:
+- emb_func
+seed: 0
+shot_num: 5
+tag: null
+tb_scale: 3.3333333333333335
+test_episode: 600
+test_epoch: 5
+test_query: 10
+test_shot: 5
+test_way: 5
+train_episode: 1000
+use_memory: false
+val_per_epoch: 1
+warmup: 0
+way_num: 5
+workers: 8
