@@ -142,3 +142,11 @@ sbatch_scripts/
 logs/
 plots/
 scripts/
+*.npy
+*.npz
+old_logs/
+*.sh
+config/
+analysis/
+spectrogram_comparison.png
+plot_spectrograms.py
