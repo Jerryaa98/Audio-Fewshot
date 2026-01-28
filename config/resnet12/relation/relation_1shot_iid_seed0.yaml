@@ -10,7 +10,7 @@ backbone:
     maxpool_last2: True
     num_channels: 1
 
-batch_size: 128
+batch_size: 32
 classifier:
   kwargs:
     feat_dim: 12800
@@ -19,7 +19,7 @@ classifier:
   name: RelationNet
 deterministic: true
 device_ids: 0
-episode_size: 4
+episode_size: 1
 epoch: 30
 includes:
 - headers/data.yaml
@@ -27,7 +27,7 @@ includes:
 - headers/misc.yaml
 - headers/model.yaml
 - headers/optimizer.yaml
-- classifiers/RelationNet.yaml
+# - classifiers/RelationNet.yaml
 - backbones/resnet12.yaml
 log_interval: 100
 log_level: info
@@ -48,7 +48,7 @@ parallel_part:
 - emb_func
 port: 40528
 pretrain_path: null
-query_num: 5
+query_num: 10
 rank: 0
 result_root: ./results
 resume: false
@@ -75,3 +75,11 @@ mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
 class_per_split: ./Auxiliary/KOS_paper_splits.npy
 ood: False
 
+backbone:
+  name: resnet12
+  kwargs:
+    keep_prob: 0.0
+    avg_pool: False
+    is_flatten: False
+    maxpool_last2: True
+    num_channels: 1

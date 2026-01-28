@@ -25,7 +25,6 @@ batch_size: 1
 classifier:
   kwargs: null
   name: R2D2
-data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
 deterministic: true
 device_ids: 0
 episode_size: 1
@@ -79,3 +78,5 @@ train_episode: 1000
 use_memory: false
 way_num: 5
 workers: 16
+# data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
+data_root: /root/SC/Results/KOS_extreme/KOS_extreme_spec

@@ -102,7 +102,7 @@ port: 49457
 
 # pretrain_path: ./results/RFS-simple-miniImageNet--ravi-Conv64F-Table2/checkpoints/emb_func_best.pth
 
-query_num: 5
+query_num: 10
 
 rank: 0
 
@@ -128,7 +128,7 @@ test_episode: 600
 
 test_epoch: 5
 
-test_query: 5
+test_query: 10
 
 test_shot: 1
 

@@ -9,8 +9,8 @@ device_ids: 1
 n_gpu: 1
 way_num: 5
 shot_num: 5
-query_num: 5
-episode_size: 4
+query_num: 10
+episode_size: 1
 train_episode: 1000
 test_episode: 600
 epoch: 30

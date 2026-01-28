@@ -10,24 +10,30 @@ includes:
 modality: audio
 mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
 class_per_split: ./Auxiliary/KOS_paper_splits.npy
-ood: True
+ood: False
 
-device_ids: 1
+device_ids: 0
 n_gpu: 1
-way_num: 15
-shot_num: 5
-query_num: 15
+way_num: 5
+shot_num: 1
+query_num: 10
 episode_size: 1
 train_episode: 500
 test_episode: 500
-epoch: 80
+epoch: 25
 test_way: 5
-# seed: 42
 augment_method: DeepBdcAugment
+
+test_episode: 600   # test/val n_episodes, number of episodes in meta val
+test_epoch: 1
+test_query: 10
+test_shot: 1
+test_way: 5
+seed: 0
 
 # pre_training: True
 # data_root: /data/fewshot/miniImageNet--ravi/
-data_root: /data/fewshot/tiered_imagenet/
+# data_root: /data/fewshot/tiered_imagenet/
 backbone:
   name: resnet12
   kwargs:
@@ -39,14 +45,14 @@ backbone:
 
 val_per_epoch: 1
 
-optimizer:
-  name: SGD
-  kwargs:
-    lr: 1e-3
-    momentum: 0.9
-    weight_decay: 5e-4
-    nesterov: true
-  other: ~
+# optimizer:
+#   name: SGD
+#   kwargs:
+#     lr: 1e-3
+#     momentum: 0.9
+#     weight_decay: 5e-4
+#     nesterov: true
+#   other: ~
     # emb_func: 0.001 # define lr OR
     # another_part:    # define multi params
     #   lr: 0.1

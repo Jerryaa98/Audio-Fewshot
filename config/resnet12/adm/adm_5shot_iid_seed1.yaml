@@ -56,7 +56,7 @@ parallel_part:
 - emb_func
 port: 44192
 pretrain_path: null
-query_num: 5
+query_num: 10
 rank: 0
 result_root: ./results
 resume: false
@@ -69,7 +69,7 @@ tag: null
 tb_scale: 3.3333333333333335
 test_episode: 600
 test_epoch: 5
-test_query: 5
+test_query: 10
 test_shot: 5
 test_way: 5
 train_episode: 1000
@@ -78,3 +78,13 @@ val_per_epoch: 1
 warmup: 0
 way_num: 5
 workers: 8
+
+
+backbone:
+  name: resnet12
+  kwargs:
+    keep_prob: 1.0
+    avg_pool: False
+    is_flatten: False
+    maxpool_last2: True
+    num_channels: 1

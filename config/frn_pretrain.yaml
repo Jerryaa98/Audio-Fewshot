@@ -10,19 +10,19 @@ includes:
 
 device_ids: 1
 n_gpu: 1
-batch_size: 128
+batch_size: 64
 augment_method: DeepBdcAugment
 way_num: 5
 shot_num: 1
-query_num: 15
+query_num: 10
 # episode_size: 1
-# train_episode: 100
+train_episode: 500
 test_episode: 600
 
 modality: audio
 mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
 class_per_split: ./Auxiliary/KOS_paper_splits.npy
-ood: True
+ood: False
 
 
 backbone:
@@ -34,13 +34,13 @@ backbone:
     maxpool_last2: True
     num_channels: 1
 
-optimizer:
-  name: SGD
-  kwargs:
-    lr: 0.1
-    momentum: 0.9
-    weight_decay: 5e-4
-  other: ~
+# optimizer:
+#   name: SGD
+#   kwargs:
+#     lr: 0.1
+#     momentum: 0.9
+#     weight_decay: 5e-4
+#   other: ~
     # emb_func: 0.001 # define lr OR
     # another_part:    # define multi params
     #   lr: 0.1
@@ -55,7 +55,7 @@ lr_scheduler:
     step_size: 30
 
 warmup: 0 # set 0 to turn off warmup
-seed: 42
+seed: 0
 # backbone:
 #   name: resnet12
 #   kwargs:

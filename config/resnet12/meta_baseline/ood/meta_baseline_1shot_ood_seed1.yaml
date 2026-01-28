@@ -11,7 +11,7 @@ backbone:
     num_channels: 1
 
 
-batch_size: 128
+batch_size: 4
 classifier:
   kwargs:
 
@@ -50,7 +50,7 @@ parallel_part:
 - classifier
 port: 31691
 # pretrain_path: ./results/MetabaselinePretrain-KOS_spec-resnet12-5-5-Sep-05-2025-22-22-05/checkpoints/emb_func_best.pth
-query_num: 5
+query_num: 10
 rank: 0
 result_root: ./results
 resume: false
@@ -63,7 +63,7 @@ tag: null
 tb_scale: 1.6666666666666667
 test_episode: 600
 test_epoch: 5
-test_query: 5
+test_query: 10
 test_shot: 1
 test_way: 5
 train_episode: 1000

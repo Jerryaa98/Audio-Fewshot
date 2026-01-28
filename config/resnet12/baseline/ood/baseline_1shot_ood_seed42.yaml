@@ -88,7 +88,7 @@ parallel_part:
 - emb_func
 port: 35001
 pretrain_path: null
-query_num: 5
+query_num: 10
 rank: 0
 result_root: ./results
 resume: true

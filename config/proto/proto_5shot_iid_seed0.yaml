@@ -175,3 +175,4 @@ use_memory: false
 way_num: 5
 data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
 
+is_clap: false

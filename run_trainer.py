@@ -6,8 +6,8 @@ sys.dont_write_bytecode = True
 
 import torch
 import os
-from core.config import Config
-from core import Trainer
+from libfewshot_core.config import Config
+from libfewshot_core import Trainer
 
 
 parser_main = argparse.ArgumentParser(description="OurAudio")

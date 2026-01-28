@@ -77,3 +77,6 @@ lr_scheduler:
 save_part:
   - emb_func
   - cls_classifier
+
+# data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
+data_root: /root/SC/Results/KOS_extreme/KOS_extreme_spec

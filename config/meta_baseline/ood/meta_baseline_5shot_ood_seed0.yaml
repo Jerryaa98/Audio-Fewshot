@@ -16,7 +16,6 @@ classifier:
   kwargs:
 
   name: MetaBaseline
-data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
 
 
 modality: audio
@@ -70,3 +69,5 @@ train_episode: 1000
 use_memory: false
 way_num: 5
 workers: 8
+# data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
+data_root: /root/SC/Results/KOS_extreme/KOS_extreme_spec

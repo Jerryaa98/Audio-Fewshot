@@ -6,5 +6,3 @@ backbone:
     is_flatten: True
     maxpool_last2: True
     num_channels: 1
-
-test_query: 1

@@ -1,4 +1,4 @@
-epoch: 50
+epoch: 25
 test_epoch: 5
 
 parallel_part:
@@ -12,11 +12,11 @@ shot_num: 1
 query_num: 10
 test_way: ~ # use ~ -> test_* = *_num
 test_shot: ~
-test_query: ~
+test_query: 10
 episode_size: 1
-train_episode: 100
-test_episode: 100
+train_episode: 500
+test_episode: 600
 
 # general model setting
-batch_size: 128
+batch_size: 1
 val_per_epoch: 1

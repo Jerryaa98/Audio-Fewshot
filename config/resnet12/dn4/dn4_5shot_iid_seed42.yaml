@@ -78,3 +78,12 @@ val_per_epoch: 1
 warmup: 0
 way_num: 5
 workers: 8
+
+backbone:
+  name: resnet12
+  kwargs:
+    keep_prob: 1.0
+    avg_pool: False
+    is_flatten: False
+    maxpool_last2: True
+    num_channels: 1

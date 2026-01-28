@@ -58,7 +58,7 @@ optimizer:
 parallel_part:
 - emb_func
 pretrain_path: null
-query_num: 5
+query_num: 10
 result_root: ./results
 resume: false
 save_interval: 50
@@ -70,7 +70,7 @@ tag: null
 tb_scale: 100.0
 test_episode: 600
 test_epoch: 5
-test_query: 5
+test_query: 10
 test_shot: 1
 test_way: 5
 train_episode: 60000
