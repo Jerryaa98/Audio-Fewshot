@@ -1,5 +1,8 @@
 # [LibFewShot](https://arxiv.org/abs/2109.04898)
-Make few-shot learning easy.
+The official implimentation of:
+
+SpurAudio: A Benchmark for Studying Shortcut Learning in Few-Shot Audio Classification
+
 
 <p align="center"><a href="https://libfewshot-en.readthedocs.io/en/latest/"><img src="./logo.png" alt="LibFewShot logo" width="40%"></a></p>
 

@@ -186,3 +186,5 @@ generate_matrix_subprocess_resnet18_seed42_ood.py
 generate_matrix_subprocess_seed0.py
 generate_matrix_subprocess_seed1.py
 generate_matrix_subprocess_seed42.py
+
+SpurAudio_dataset/*/*
