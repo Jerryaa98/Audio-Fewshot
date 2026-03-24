@@ -176,11 +176,11 @@ class Trainer(object):
             # calculate the output
             calc_begin = time()
             casting_ = lambda x: x.to(self.device) if not isinstance(x, int) and x is not None else (None if x is None else x)
-            if self.is_clap:
-                # Convert batch to list to allow modification
+            if self.is_clap and self.config.get('clap_data_mode', 'embeddings') == 'waveforms':
+                # Waveform mode: extract embeddings via CLAPEncoder
                 batch = list(batch)
                 batch[0] = list(batch[0])
-                batch[0][0] = self.model.emb_func.extract_embeddings_from_audio_paths(batch[0][0], is_train=True)
+                batch[0][0] = self.model.emb_func.extract_and_forward(batch[0][0], is_train=True)
                 batch = tuple(batch)
 
             output, acc, loss = self.model(
@@ -276,11 +276,11 @@ class Trainer(object):
 
                 meter.update("data_time", time() - end)
 
-                if self.is_clap:
-                    # Convert batch to list to allow modification
+                if self.is_clap and self.config.get('clap_data_mode', 'embeddings') == 'waveforms':
+                    # Waveform mode: extract embeddings via CLAPEncoder
                     batch = list(batch)
                     batch[0] = list(batch[0])
-                    batch[0][0] = self.model.emb_func.extract_embeddings_from_audio_paths(batch[0][0], is_train=False)
+                    batch[0][0] = self.model.emb_func.extract_and_forward(batch[0][0], is_train=False)
                     batch = tuple(batch)
 
                 # calculate the output
@@ -434,11 +434,14 @@ class Trainer(object):
         Returns:
             tuple: A tuple of the model and model's type.
         """
-        if not config["is_clap"]:
+        if not config.get("is_clap", False):
+            emb_func = get_instance(arch, "backbone", config)
+        elif config.get("backbone", {}).get("name") == "CLAPEncoder":
+            # Use CLAPEncoder through normal backbone loading
             emb_func = get_instance(arch, "backbone", config)
         else:
-            emb_func = arch.CLAPBackbone(device=self.device, checkpoint_path = '/root/CLAP-OOD/clap_episodic/clap_episodic_epoch15.pt')
-            # emb_func = arch.CLAPBackbone(device=self.device, checkpoint_path = '/root/CLAP-OOD/clap_episodic/clap_episodic_epoch15.pt')
+            # Legacy path: direct CLAPBackbone instantiation
+            emb_func = arch.CLAPBackbone(device=self.device)
         model_kwargs = {
             "way_num": config["way_num"],
             "shot_num": config["shot_num"] * config["augment_times"],

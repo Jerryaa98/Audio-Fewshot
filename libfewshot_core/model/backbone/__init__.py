@@ -12,6 +12,7 @@ from .resnet_bdc import resnet12Bdc, resnet18Bdc
 from libfewshot_core.model.backbone.utils.maml_module import convert_maml_module
 from .vit_class_aware import VisionTransformer
 from .clap import CLAPBackbone, CLAPEmbeddingBackbone
+from .clap_encoder import CLAPEncoder  # CLAP backbone with freeze control and spatial projection
 
 def get_backbone(config):
     """Get the backbone according to the config dict.
