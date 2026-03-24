@@ -73,13 +73,15 @@ class CLAPEncoder(nn.Module):
     """CLAP encoder backbone with configurable freezing and spatial projection.
 
     Args:
-        is_flatten: If True (mode-1), return flat 512-d vectors.
+        is_flatten: If True (mode-1), return flat vectors.
             If False (mode-2), project to spatial feature map [B, C, H, W].
         freeze_mode: One of 'full' (freeze entire CLAP), 'partial' (unfreeze
             last ``frozen_layers`` layer groups), or 'none' (all trainable).
         frozen_layers: Number of last layer groups to unfreeze when
             freeze_mode='partial'.
         enable_fusion: Whether to enable fusion in the CLAP model.
+        projection_dim: Output dimension for the learnable projection head
+            in mode-1. Set to 0 to disable (pass-through). Defaults to 512.
         spatial_channels: Channel dimension C for mode-2 spatial output.
         spatial_size: Spatial height/width for mode-2 output (H = W).
         **kwargs: Ignored extra keyword arguments for config compatibility.
@@ -91,6 +93,7 @@ class CLAPEncoder(nn.Module):
         freeze_mode: str = 'full',
         frozen_layers: int = 0,
         enable_fusion: bool = False,
+        projection_dim: int = 512,
         spatial_channels: int = 64,
         spatial_size: int = 5,
         **kwargs,
@@ -108,6 +111,7 @@ class CLAPEncoder(nn.Module):
         self.is_flatten: bool = is_flatten
         self.freeze_mode: str = freeze_mode
         self.frozen_layers: int = frozen_layers
+        self.projection_dim: int = projection_dim
         self.spatial_channels: int = spatial_channels
         self.spatial_size: int = spatial_size
 
@@ -117,8 +121,16 @@ class CLAPEncoder(nn.Module):
 
         # Feature dimension exposed to downstream classifiers (used by LibFewShot)
         if is_flatten:
-            # Mode 1: flat 512-d vector for Baseline, BaselinePlus, MetaBaseline, ProtoNet
-            self.feat_dim: int = 512
+            # Mode 1: learnable projection from 512-d CLAP space to task space
+            # This ensures there are always trainable parameters (needed for
+            # frozen CLAP + metric classifiers like ProtoNet that have no
+            # learnable params of their own).
+            if projection_dim > 0:
+                self.proj = nn.Linear(512, projection_dim)
+                self.feat_dim: int = projection_dim
+            else:
+                self.proj = None
+                self.feat_dim = 512
         else:
             # Mode 2: spatial [B, C, H, W] feature map for ADM, DN4
             self.feat_dim = spatial_channels
@@ -188,12 +200,14 @@ class CLAPEncoder(nn.Module):
             x: Pre-extracted CLAP embeddings of shape ``[B, 512]``.
 
         Returns:
-            If ``is_flatten=True``: tensor of shape ``[B, 512]`` (pass-through).
+            If ``is_flatten=True``: tensor of shape ``[B, projection_dim]``.
             If ``is_flatten=False``: tensor of shape
             ``[B, spatial_channels, spatial_size, spatial_size]``
             produced by a learned linear projection + reshape.
         """
         if self.is_flatten:
+            if self.proj is not None:
+                return self.proj(x)
             return x
 
         B = x.size(0)

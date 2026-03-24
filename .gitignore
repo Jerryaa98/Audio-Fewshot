@@ -145,6 +145,9 @@ plots/
 *.npz
 old_logs/
 config/
+!config/backbones/
+!config/backbones/CLAPEncoder.yaml
+!config/backbones/CLAPEncoder_partial.yaml
 analysis/
 spectrogram_comparison.png
 plot_spectrograms.py
