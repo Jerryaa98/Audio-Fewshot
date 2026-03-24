@@ -188,3 +188,7 @@ generate_matrix_subprocess_seed1.py
 generate_matrix_subprocess_seed42.py
 
 SpurAudio_dataset/*/*
+
+# Agent pipeline artifacts (session-specific, not versioned)
+agent_pipeline/artifacts/*
+!agent_pipeline/artifacts/.gitkeep
