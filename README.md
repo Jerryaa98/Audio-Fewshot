@@ -58,7 +58,7 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 - [QwenAudio-7b-Instruct](https://huggingface.co/Qwen/Qwen2-Audio-7B-Instruct)
 - [Beats](https://arxiv.org/abs/2212.09058)
 
-### Contrastive Learning
+### Contrastive Learning (Coming Soon)
 - [SimCLR (Neurips 2020)](https://arxiv.org/abs/2002.05709)
 - [Contrastive Proto (2025)](https://arxiv.org/abs/2509.10074)
 
