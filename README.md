@@ -6,9 +6,9 @@ Official implementation for:
 
 Authors: Anonymous
 
-<p align="center">
+<!-- <p align="center">
 	<img src="./images/logo.png" alt="LibFewShot logo" width="36%" />
-</p>
+</p> -->
 
 ---
 
@@ -20,9 +20,9 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 - Multiple few-shot paradigms (fine-tuning, meta-learning, metric-learning).
 - Backbone and classifier modular configuration through YAML.
 
-- <p align="center">
+<!-- <p align="center">
 	<img src="./images/illustration_iid_vs_ood.png" alt="IID vs OOD illustration" width="72%" />
-</p>
+</p> -->
 
 ---
 
@@ -50,6 +50,17 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 - [ADM (IJCAI 2020)](https://arxiv.org/abs/2002.00153)
 - [DeepBDC (CVPR 2022)](https://arxiv.org/abs/2204.04567)
 - [MCL (CVPR 2022)](http://openaccess.thecvf.com/content/CVPR2022/html/Liu_Learning_To_Affiliate_Mutual_Centralized_Learning_for_Few-Shot_Classification_CVPR_2022_paper.html)
+
+### Large Audio-Models
+- [CLAP (2022)](https://arxiv.org/abs/2211.06687)
+- [AudioMAE (Neurips 2023)](https://arxiv.org/abs/2207.06405)
+- [AST (2021)](https://arxiv.org/abs/2104.01778)
+- [QwenAudio-7b-Instruct](https://huggingface.co/Qwen/Qwen2-Audio-7B-Instruct)
+- [Beats](https://arxiv.org/abs/2212.09058)
+
+### Contrastive Learning
+- [SimCLR (Neurips 2020)](https://arxiv.org/abs/2002.05709)
+- [Contrastive Proto (2025)](https://arxiv.org/abs/2509.10074)
 
 ---
 
