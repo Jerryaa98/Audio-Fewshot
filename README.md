@@ -36,10 +36,8 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 
 ### Meta-learning based
 - [MAML (ICML 2017)](https://arxiv.org/abs/1703.03400)
-- [Versa (NeurIPS 2018)](https://openreview.net/forum?id=HkxStoC5F7)
 - [R2D2 (ICLR 2019)](https://arxiv.org/abs/1805.08136)
 - [LEO (ICLR 2019)](https://arxiv.org/abs/1807.05960)
-- [MTL (CVPR 2019)](https://arxiv.org/abs/1812.02391)
 - [ANIL (ICLR 2020)](https://arxiv.org/abs/1909.09157)
 - [BOIL (ICLR 2021)](https://arxiv.org/abs/2008.08882)
 - [MeTAL (ICCV 2021)](https://arxiv.org/abs/2110.03909)
@@ -50,7 +48,6 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 - [DN4 (CVPR 2019)](https://arxiv.org/abs/1903.12290)
 - [ATL-Net (IJCAI 2020)](https://www.ijcai.org/proceedings/2020/0100.pdf)
 - [ADM (IJCAI 2020)](https://arxiv.org/abs/2002.00153)
-- [FRN (CVPR 2021)](https://arxiv.org/abs/2012.01506)
 - [DeepBDC (CVPR 2022)](https://arxiv.org/abs/2204.04567)
 - [MCL (CVPR 2022)](http://openaccess.thecvf.com/content/CVPR2022/html/Liu_Learning_To_Affiliate_Mutual_Centralized_Learning_for_Few-Shot_Classification_CVPR_2022_paper.html)
 
