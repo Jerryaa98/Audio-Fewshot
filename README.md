@@ -78,11 +78,14 @@ pip install -r requirements.txt
 
 ### 2) Dataset and metadata preparation
 
+SpurAudio can be constructed manually using the merging scripts, follow the ReadMe in the `Mixer` directory.
+SpurAudio can be downloaded from HuggingFace (link will go public upon acceptance)
+
 Make sure these assets exist and match your local paths:
 
 - `SpurAudio_dataset/` (or your configured data root).
-- `Auxiliary/Spurious_Mean_Std.npy` (or selected mean/std file).
-- `Auxiliary/KOS_paper_splits.npy` (class split definition).
+- `Auxiliary/Spurious_Mean_Std.npy` (Should be in the Github repo).
+- `Auxiliary/KOS_paper_splits.npy` (Should be in the Github repo).
 
 If your machine paths differ, update the relevant YAML entries such as `data_root`, `mean_std_file`, and `class_per_split`.
 
