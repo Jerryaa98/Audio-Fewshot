@@ -12,10 +12,6 @@ Authors: Anonymous
 	</a>
 </p>
 
-<p align="center">
-	<img src="./images/illustration_iid_vs_ood.png" alt="IID vs OOD illustration" width="72%" />
-</p>
-
 ---
 
 ## Overview
@@ -25,6 +21,10 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 - IID and OOD episode evaluation.
 - Multiple few-shot paradigms (fine-tuning, meta-learning, metric-learning).
 - Backbone and classifier modular configuration through YAML.
+
+- <p align="center">
+	<img src="./images/illustration_iid_vs_ood.png" alt="IID vs OOD illustration" width="72%" />
+</p>
 
 ---
 
