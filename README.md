@@ -7,9 +7,7 @@ Official implementation for:
 Authors: Anonymous
 
 <p align="center">
-	<a href="https://libfewshot-en.readthedocs.io/en/latest/">
-		<img src="./images/logo.png" alt="LibFewShot logo" width="36%" />
-	</a>
+	<img src="./images/logo.png" alt="LibFewShot logo" width="36%" />
 </p>
 
 ---
