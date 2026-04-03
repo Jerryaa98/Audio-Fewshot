@@ -79,7 +79,7 @@ pip install -r requirements.txt
 ### 2) Dataset and metadata preparation
 
 SpurAudio can be constructed manually using the merging scripts, follow the ReadMe in the `Mixer` directory.
-SpurAudio can be downloaded from HuggingFace (link will go public upon acceptance)
+SpurAudio can be downloaded from HuggingFace (link will go public soon)
 When downloaded from hugging face, unpack all train, validation and test directories into a single directory in order to work with this repo, the splits npy file will take the nescessary files for the task.
 
 Make sure these assets exist and match your local paths:
