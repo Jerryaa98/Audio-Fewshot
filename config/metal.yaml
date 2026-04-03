@@ -5,7 +5,7 @@ includes:
   - headers/model.yaml
   - headers/optimizer.yaml
 
-data_root: /mnt/c/Users/murad/Desktop/MetaAudio/KOS_spec
+data_root: /root/KOS_spec
 way_num: 5
 shot_num: 1
 
