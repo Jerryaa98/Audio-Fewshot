@@ -16,7 +16,7 @@ test_episode: 600
 epoch: 30
 modality: audio
 mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
-class_per_split: ./Auxiliary/KOS_paper_splits.npy
+class_per_split: ./Auxiliary/SpurAudio_paper_splits.npy
 ood: False
 
 lr_scheduler:

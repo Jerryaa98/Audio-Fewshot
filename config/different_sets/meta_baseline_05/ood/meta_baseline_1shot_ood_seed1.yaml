@@ -21,7 +21,7 @@ data_root: /root/SC/Results/KOS_0.5_alpha/KOS_0.5_alpha_spec
 
 modality: audio
 mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
-class_per_split: ./Auxiliary/KOS_paper_splits.npy
+class_per_split: ./Auxiliary/SpurAudio_paper_splits.npy
 ood: True
 
 deterministic: true

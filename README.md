@@ -86,7 +86,7 @@ Make sure these assets exist and match your local paths:
 
 - `SpurAudio_dataset/` (or your configured data root).
 - `Auxiliary/Spurious_Mean_Std.npy` (Should be in the Github repo).
-- `Auxiliary/KOS_paper_splits.npy` (Should be in the Github repo).
+- `Auxiliary/SpurAudio_paper_splits.npy` (Should be in the Github repo).
 
 If your machine paths differ, update the relevant YAML entries such as `data_root`, `mean_std_file`, and `class_per_split`.
 

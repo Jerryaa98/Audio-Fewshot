@@ -15,8 +15,8 @@
 # test_episode: 600
 # epoch: 100
 modality: audio
-mean_std_file: ./Auxiliary/KOS_0.5_alpha_Mean_Std.npy
-class_per_split: ./Auxiliary/KOS_paper_splits.npy
+mean_std_file: ./Auxiliary/SpurAudio_0.5_alpha_Mean_Std.npy
+class_per_split: ./Auxiliary/SpurAudio_paper_splits.npy
 ood: False
 
 
