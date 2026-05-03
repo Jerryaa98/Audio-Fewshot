@@ -1,0 +1,11 @@
+numpy
+torch
+torchaudio
+librosa
+laion-clap
+tqdm
+transformers>=4.40
+accelerate
+timm
+scikit-learn
+scipy
