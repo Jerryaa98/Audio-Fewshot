@@ -5,7 +5,7 @@ includes:
   - headers/model.yaml
   - headers/optimizer.yaml
 
-data_root: /mnt/c/Users/murad/Desktop/MetaAudio/KOS_spec
+data_root: /root/KOS_spec
 way_num: 5
 shot_num: 1
 
@@ -22,7 +22,7 @@ n_gpu: 1
 epoch: 100
 modality: audio
 mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
-class_per_split: ./Auxiliary/KOS_paper_splits.npy
+class_per_split: ./Auxiliary/SpurAudio_paper_splits.npy
 ood: True
 
 optimizer:

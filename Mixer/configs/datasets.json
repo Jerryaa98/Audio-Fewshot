@@ -1,0 +1,46 @@
+{
+  "datasets":[
+    {
+      "name": "ESC50",
+      "main_dir": "Datasets/ESC-50",
+      "audio_dir": "audio",
+      "meta_file": "meta/esc50.csv",
+      "Foreground_Background": "Mixed"
+    },
+    {
+      "name": "DESED",
+      "main_dir": "Datasets/DESED",
+      "audio_dir": "",
+      "meta_file": "",
+      "Foreground_Background": "Mixed"
+    },
+    {
+      "name": "USM",
+      "main_dir": "Datasets/USM",
+      "audio_dir": ["train", "eval", "val"],
+      "meta_file": "N/A",
+      "Foreground_Background": "Mixed"
+    },
+    {
+      "name": "DECASE2016",
+      "main_dir": "Datasets/DECASE2016",
+      "audio_dir": "dcase2016_task2_train_dev/dcase2016_task2_train",
+      "meta_file": "N/A",
+      "Foreground_Background": "Mixed"
+    },
+    {
+      "name": "VocalSound",
+      "main_dir": "Datasets/VocalSound",
+      "audio_dir": "audio_16k",
+      "meta_file": "class_labels_indices_vs.csv",
+      "Foreground_Background": "Mixed"
+    },
+    {
+      "name": "Urban8k",
+      "main_dir": "Datasets/Urban8k",
+      "audio_dir": "audio/fold*",
+      "meta_file": "metadata/UrbanSound8K.csv",
+      "Foreground_Background": "Mixed"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+Datasets:
+  file_name: "configs/datasets.json"
+  cross_product: false
+  foreground_background_matcher: "Matcher/FBC_ablation.csv"
+  dataset_target_name: KOS_ablation
+Alterations:
+  combination_coffiecents: 'auto'
+  loop_background: "Yes"
+  policy: "1:1"
+Settings:
+  save_path: 
+  audio_len_threshold: "auto"

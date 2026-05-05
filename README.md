@@ -6,15 +6,9 @@ Official implementation for:
 
 Authors: Anonymous
 
-<p align="center">
-	<a href="https://libfewshot-en.readthedocs.io/en/latest/">
-		<img src="./images/logo.png" alt="LibFewShot logo" width="36%" />
-	</a>
-</p>
-
-<p align="center">
-	<img src="./images/illustration_iid_vs_ood.png" alt="IID vs OOD illustration" width="72%" />
-</p>
+<!-- <p align="center">
+	<img src="./images/logo.png" alt="LibFewShot logo" width="36%" />
+</p> -->
 
 ---
 
@@ -25,6 +19,10 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 - IID and OOD episode evaluation.
 - Multiple few-shot paradigms (fine-tuning, meta-learning, metric-learning).
 - Backbone and classifier modular configuration through YAML.
+
+<!-- <p align="center">
+	<img src="./images/illustration_iid_vs_ood.png" alt="IID vs OOD illustration" width="72%" />
+</p> -->
 
 ---
 
@@ -38,10 +36,8 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 
 ### Meta-learning based
 - [MAML (ICML 2017)](https://arxiv.org/abs/1703.03400)
-- [Versa (NeurIPS 2018)](https://openreview.net/forum?id=HkxStoC5F7)
 - [R2D2 (ICLR 2019)](https://arxiv.org/abs/1805.08136)
 - [LEO (ICLR 2019)](https://arxiv.org/abs/1807.05960)
-- [MTL (CVPR 2019)](https://arxiv.org/abs/1812.02391)
 - [ANIL (ICLR 2020)](https://arxiv.org/abs/1909.09157)
 - [BOIL (ICLR 2021)](https://arxiv.org/abs/2008.08882)
 - [MeTAL (ICCV 2021)](https://arxiv.org/abs/2110.03909)
@@ -52,7 +48,6 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 - [DN4 (CVPR 2019)](https://arxiv.org/abs/1903.12290)
 - [ATL-Net (IJCAI 2020)](https://www.ijcai.org/proceedings/2020/0100.pdf)
 - [ADM (IJCAI 2020)](https://arxiv.org/abs/2002.00153)
-- [FRN (CVPR 2021)](https://arxiv.org/abs/2012.01506)
 - [DeepBDC (CVPR 2022)](https://arxiv.org/abs/2204.04567)
 - [MCL (CVPR 2022)](http://openaccess.thecvf.com/content/CVPR2022/html/Liu_Learning_To_Affiliate_Mutual_Centralized_Learning_for_Few-Shot_Classification_CVPR_2022_paper.html)
 
@@ -63,6 +58,17 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 - [Proto-LP (2023)](https://arxiv.org/abs/1703.05175)
 - [BPA (2024)](https://arxiv.org/abs/2407.01467)
 - [ECPE (2026)](https://www.sciencedirect.com/science/article/abs/pii/S0167865526000231)
+- 
+### Large Audio-Models
+- [CLAP (2022)](https://arxiv.org/abs/2211.06687)
+- [AudioMAE (Neurips 2023)](https://arxiv.org/abs/2207.06405)
+- [AST (2021)](https://arxiv.org/abs/2104.01778)
+- [QwenAudio-7b-Instruct](https://huggingface.co/Qwen/Qwen2-Audio-7B-Instruct)
+- [Beats](https://arxiv.org/abs/2212.09058)
+
+### Contrastive Learning (Coming Soon)
+- [SimCLR (Neurips 2020)](https://arxiv.org/abs/2002.05709)
+- [Contrastive Proto (2025)](https://arxiv.org/abs/2509.10074)
 
 ---
 
@@ -80,11 +86,15 @@ pip install -r requirements.txt
 
 ### 2) Dataset and metadata preparation
 
+SpurAudio can be constructed manually using the merging scripts, follow the ReadMe in the `Mixer` directory.
+SpurAudio can be downloaded from HuggingFace (link will go public soon)
+When downloaded from hugging face, unpack all train, validation and test directories into a single directory in order to work with this repo, the splits npy file will take the nescessary files for the task.
+
 Make sure these assets exist and match your local paths:
 
 - `SpurAudio_dataset/` (or your configured data root).
-- `Auxiliary/Spurious_Mean_Std.npy` (or selected mean/std file).
-- `Auxiliary/KOS_paper_splits.npy` (class split definition).
+- `Auxiliary/Spurious_Mean_Std.npy` (Should be in the Github repo).
+- `Auxiliary/SpurAudio_paper_splits.npy` (Should be in the Github repo).
 
 If your machine paths differ, update the relevant YAML entries such as `data_root`, `mean_std_file`, and `class_per_split`.
 
