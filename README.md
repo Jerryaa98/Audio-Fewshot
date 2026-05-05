@@ -51,6 +51,14 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 - [DeepBDC (CVPR 2022)](https://arxiv.org/abs/2204.04567)
 - [MCL (CVPR 2022)](http://openaccess.thecvf.com/content/CVPR2022/html/Liu_Learning_To_Affiliate_Mutual_Centralized_Learning_for_Few-Shot_Classification_CVPR_2022_paper.html)
 
+### Transductive Methods
+- [LaplacianShot (2020)](https://arxiv.org/abs/2006.15486)
+- [BDCSPN (2020)](https://arxiv.org/pdf/1911.10713)
+- [PADDLE (2022)](https://arxiv.org/abs/2210.14545)
+- [Proto-LP (2023)](https://arxiv.org/abs/1703.05175)
+- [BPA (2024)](https://arxiv.org/abs/2407.01467)
+- [ECPE (2026)](https://www.sciencedirect.com/science/article/abs/pii/S0167865526000231)
+- 
 ### Large Audio-Models
 - [CLAP (2022)](https://arxiv.org/abs/2211.06687)
 - [AudioMAE (Neurips 2023)](https://arxiv.org/abs/2207.06405)
