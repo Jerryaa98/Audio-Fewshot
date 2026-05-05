@@ -56,6 +56,9 @@ This repository extends LibFewShot for few-shot **audio** classification experim
 - [DeepBDC (CVPR 2022)](https://arxiv.org/abs/2204.04567)
 - [MCL (CVPR 2022)](http://openaccess.thecvf.com/content/CVPR2022/html/Liu_Learning_To_Affiliate_Mutual_Centralized_Learning_for_Few-Shot_Classification_CVPR_2022_paper.html)
 
+### Transductive Methods
+
+
 ---
 
 ## Reproducibility Guide
