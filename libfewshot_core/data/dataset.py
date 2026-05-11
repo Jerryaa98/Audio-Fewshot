@@ -258,14 +258,14 @@ class GeneralAudioDataset(Dataset):
             ) = self._generate_data_list()
 
         if self.kwargs.get('is_clap', False):
-            if os.path.exists('/root/SC/Results/KOS_1_alpha/librosa_audios.pkl'):
-                with open('/root/SC/Results/KOS_1_alpha/librosa_audios.pkl', 'rb') as f:
+            if os.path.exists('/root/SC/Results/SpurAudio/librosa_audios.pkl'):
+                with open('/root/SC/Results/SpurAudio/librosa_audios.pkl', 'rb') as f:
                     self.librosa_numpys = pickle.load(f)
             else:
                 self.librosa_numpys = []
 
                 for audio_path in tqdm(self.data_list):
-                    audio_data, _ = librosa.load(audio_path.replace(".npy", ".wav").replace("KOS_1_alpha_spec", "Sorted"),sr=48000) # sample rate should be 48000
+                    audio_data, _ = librosa.load(audio_path.replace(".npy", ".wav").replace("SpurAudio_spec", "Sorted"),sr=48000) # sample rate should be 48000
                     audio_data = audio_data.reshape(1, -1) # Make it (1,T) or (N,T)
                     self.librosa_numpys.append(audio_data)
                     # print(len(self.librosa_numpys))
@@ -273,7 +273,7 @@ class GeneralAudioDataset(Dataset):
                 print(len(self.librosa_numpys))
                 
                 input()
-                with open('/root/SC/Results/KOS_1_alpha/librosa_audios.pkl', 'wb') as f:
+                with open('/root/SC/Results/SpurAudio/librosa_audios.pkl', 'wb') as f:
                     pickle.dump(self.librosa_numpys, f)
 
         self.label_num = len(self.class_label_dict['label'])

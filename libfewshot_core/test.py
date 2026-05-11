@@ -172,7 +172,6 @@ class Test(object):
         self.test_meter = self._init_meter()
         print(config)
         self.model, self.model_type = self._init_model(config)
-        # For Jerry -- Add also validation loader (also change yaml accordingly to account for val episodes)
         self.val_loader = self._init_val_dataloader(config)
         
         self.test_loader = self._init_dataloader(config)

@@ -8,9 +8,9 @@ includes:
   # - backbones/resnet12.yaml
 
 modality: audio
-mean_std_file: ./Auxiliary/KOS_0.5_alpha_Mean_Std.npy
+mean_std_file: ./Auxiliary/SpurAudio_0.5_alpha_Mean_Std.npy
 # mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
-class_per_split: ./Auxiliary/KOS_paper_splits.npy
+class_per_split: ./Auxiliary/SpurAudio_paper_splits.npy
 
 
 # device_ids: 0

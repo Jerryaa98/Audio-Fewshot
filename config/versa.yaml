@@ -18,7 +18,7 @@ episode_size: 1
 
 modality: audio
 mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
-class_per_split: ./Auxiliary/KOS_paper_splits.npy
+class_per_split: ./Auxiliary/SpurAudio_paper_splits.npy
 ood: True
 
 
@@ -46,7 +46,7 @@ augment_times: 1
 augment_times_query: 1
 
 batch_size: 1
-data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
+data_root: /root/SC/Results/SpurAudio/SpurAudio_spec
 deterministic: true
 device_ids: 0
 discriminative: false

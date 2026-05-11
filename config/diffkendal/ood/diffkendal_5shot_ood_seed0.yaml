@@ -14,7 +14,7 @@ batch_size: 1
 classifier:
   kwargs: null
   name: MetaBaselineKendall
-data_root: /root/SC/Results/KOS_1_alpha/KOS_1_alpha_spec
+data_root: /root/SC/Results/SpurAudio/SpurAudio_spec
 dataloader_num: 1
 deterministic: true
 device_ids: 0
@@ -73,5 +73,5 @@ workers: 8
 
 modality: audio
 mean_std_file: ./Auxiliary/Clean_Mean_Std.npy
-class_per_split: ./Auxiliary/KOS_paper_splits.npy
+class_per_split: ./Auxiliary/SpurAudio_paper_splits.npy
 ood: True
