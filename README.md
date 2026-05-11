@@ -4,17 +4,11 @@ Official implementation for:
 
 **SpurAudio: A Benchmark for Studying Shortcut Learning in Few-Shot Audio Classification**
 
-Authors: Anonymous
+Authors: Anonymous (under review)
 
-<p align="center">
-	<a href="https://libfewshot-en.readthedocs.io/en/latest/">
-		<img src="./images/logo.png" alt="LibFewShot logo" width="36%" />
-	</a>
-</p>
+![SpurAudio logo](images/logo.png)
 
-<p align="center">
-	<img src="./images/illustration_iid_vs_ood.png" alt="IID vs OOD illustration" width="72%" />
-</p>
+![IID vs OOD illustration](images/illustration_iid_vs_ood.png)
 
 ---
 
@@ -23,8 +17,73 @@ Authors: Anonymous
 This repository extends LibFewShot for few-shot **audio** classification experiments on SpurAudio, with support for:
 
 - IID and OOD episode evaluation.
-- Multiple few-shot paradigms (fine-tuning, meta-learning, metric-learning).
-- Backbone and classifier modular configuration through YAML.
+- Multiple few-shot paradigms (fine-tuning, meta-learning, metric-learning, transductive).
+- Backbone and classifier modular configurations.
+
+---
+
+## SpurAudio Dataset Layout
+
+### Top-level directory layout
+
+```
+LibFewShot/
+├── SpurAudio_dataset/            # per-class spectrogram tensors (.npy)
+│   ├── air_conditioner/
+│   ├── blender/
+│   ├── cat/
+│   ├── dog+dog_bark/
+│   ├── …                         # 38 class folders total
+│   └── laughter/
+├── Auxiliary/                    # normalization stats + class-split definition
+│   ├── Clean_Mean_Std.npy
+│   ├── Spurious_Mean_Std.npy
+│   └── SpurAudio_paper_splits.npy
+├── data/
+│   └── fewshot/
+├── config/                       # YAML configs
+├── libfewshot_core/              # framework source
+└── results/                      # training outputs
+```
+
+### Per-class file naming convention
+
+Each `.npy` inside a class folder is a spectrogram tensor for one sample. Filenames encode the mixing of two classes:
+
+```
+SpurAudio_dataset/cat/cat-crying_baby_alpha=0.00013126751582603902_loop=1_id=37.npy
+                       │   │           │                                  │       │
+                       │   │           │                                  │       └── sample id
+                       │   │           │                                  └── loop index
+                       │   │           └── mixing coefficient (α) between foreground and background
+                       │   └── background class
+                       └── foreground class
+```
+
+The directory the file lives in is the **foreground** class (the label); the second class in the filename is the **background** spurious co-occurrence.
+
+### Class splits file
+
+`Auxiliary/SpurAudio_paper_splits.npy` is a NumPy array (loaded with `np.load(..., allow_pickle=True)`) whose three top-level entries are the class-name lists for each split:
+
+- index `0` → list of **train** class names
+- index `1` → list of **validation** class names
+- index `2` → list of **test** class names
+
+Each entry is a list of strings matching subfolder names under `SpurAudio_dataset/` (e.g. `"cat"`, `"dog+dog_bark"`). To replicate the paper splits, leave this file untouched; to define your own splits, write a 3-element object array in the same `[train, val, test]` order and point `class_per_split` in your YAML at it.
+
+### Downloading the dataset
+
+In the meantime, you can download the SpurAudio dataset (with its splits) from the anonymous Hugging Face repository: [`spuraudioNips/SpurAudio-neurips-anonym`](https://huggingface.co/datasets/spuraudioNips/SpurAudio-neurips-anonym).
+
+To run the pipeline on it:
+
+1. Unpack all audio files into a single flat directory, e.g. `all_audios_unpacked/`.
+2. Run the ESC-50 full-stack script on that folder to produce the `SpurAudio_dataset/` spectrogram layout shown above.
+
+### Generating the dataset (and using a custom one)
+
+The SpurAudio spectrograms are produced from ESC-50 by the ESC-50 full-stack script. If you want to use a different audio dataset, run that same script on your dataset to produce a `SpurAudio_dataset/`-shaped folder — i.e. one subfolder per foreground class, with `.npy` filenames following the `{foreground}-{background}_alpha={float}_loop={int}_id={int}.npy` schema shown above. The rest of the pipeline (configs, dataloaders, normalization) expects exactly this format.
 
 ---
 
