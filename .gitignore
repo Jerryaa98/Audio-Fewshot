@@ -188,3 +188,5 @@ generate_matrix_subprocess_seed1.py
 generate_matrix_subprocess_seed42.py
 
 SpurAudio_dataset/*/*
+
+!SpurAudio_paper_splits.npy
